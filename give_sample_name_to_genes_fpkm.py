@@ -27,6 +27,6 @@ for directory in tophat_dirs:
             if mo:
                 shutil.copy(f,output_dir)
                 os.chdir(output_dir)
-                os.rename(f, "{}.genes.fpkm_tracking".format(sample_name))
+                os.rename(f, "OLD_{}.genes.fpkm_tracking.txt".format(sample_name))
 
 
