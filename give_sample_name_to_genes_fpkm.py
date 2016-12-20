@@ -20,7 +20,7 @@ for directory in tophat_dirs:
     os.chdir(directory)
     for i in cuff_dirs:
         os.chdir(i)
-        sample_name = regex.match(i).group()
+        sample_name = regex.match(i).group(1)
         files = [f for f in os.listdir('.') if os.path.isfile(f)]
         for f in files:
             mo = re.search(r'genes.fpkm_tracking',f)
