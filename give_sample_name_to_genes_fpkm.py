@@ -1,7 +1,7 @@
 #! user/bin/env python
-##Super quick and dirty bot seems to work
+## Messy but gets the job done
 ## argv 1 absolute path to OLD RNA pipeline analysis dir
-## argv 2 where you want the files copied to
+## argv 2 Outputdir 
 
 import os
 import re
@@ -11,9 +11,14 @@ import sys
 analysis_dir = sys.argv[1]
 output_dir=os.path.abspath(sys.argv[2])
 os.chdir(analysis_dir)
-tophat_dirs = [f for f in os.listdir(analysis_dir) if os.path.isdir(f)]
+#To find NGI sample names 
 regex = re.compile('cufflinks_out_(P\d.*)')
+#To find the cufflink dirs
 regex_cuff = re.compile('cufflinks_out_*')
+# get all dirs
+tophat_dirs = [f for f in os.listdir(analysis_dir) if os.path.isdir(f)]
+#iterate through the dirs and find the cuflinks dir. In there find the genes.fpkm file, 
+#move it to the outdir and rename it by the sample name
 for directory in tophat_dirs:
     os.chdir(analysis_dir)
     cuff_dirs=[f for f in os.listdir(os.path.abspath(directory)) if regex_cuff.match(f)]
