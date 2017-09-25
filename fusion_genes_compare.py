@@ -46,8 +46,8 @@ def read_files_store_data(input_files,output_file):
 
 def make_report(star_dict, fc_dict, output_file):
     content=str()
-    content+=("Number of Fusion genes detected with STAR-fusion: {} \n".format(len(star_dict)))
-    content+=("Number of Fusion genes detected with FusionCatcher: {} \n".format(len(fc_dict)))
+    content+="## Number of Fusion genes detected with STAR-fusion: {} \n".format(len(star_dict))
+    content+="## Number of Fusion genes detected with FusionCatcher: {} \n".format(len(fc_dict))
     gene_in_both=[]
     gene_star_only=[]
     gene_fc_only=[]
@@ -69,9 +69,14 @@ def make_report(star_dict, fc_dict, output_file):
             gene_fc_only.append(gene_A)
         if gene_B not in star_dict:
             gene_fc_only.append(gene_B)
-
-    import pdb
-    pdb.set_trace()
+    content +="##BOTH,STAR-FUSION,FUSIONCATCHER\n"
+    maxlen = max([len(l) for l in [gene_in_both,gene_star_only,gene_fc_only]])
+    for idx in range(0, maxlen-1):
+	astr = gene_in_both[idx] if len(gene_in_both) > idx else ''
+	bstr = gene_star_only[idx] if len(gene_star_only) > idx else ''
+	cstr = gene_fc_only[idx] if len(gene_fc_only) > idx else ''
+	content += "{}\t{}\t{}\n".format(astr, bstr, cstr)    
+ 
     with open(output_file, 'w') as f:
         f.write(content)
      
