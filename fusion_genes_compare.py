@@ -43,6 +43,25 @@ def read_files_store_data(input_files,output_file):
     make_report(star_dict, fc_dict, output_file)
 
 
+def group_NGI_files(input_files,outputfile):
+    sample_pattern=re.compile("^(P[0-9]+_[0-9]+)")
+    matches=[]
+    for input_file in input_files:
+        try:
+            match=sample_pattern.search(os.path.basename(input_file)).group(1)
+            if match:
+                matches.append(match)
+        except AttributeError:
+            continue
+    NGI_names=matches    
+    for NGI_name in NGI_names:
+        sample_files=[]
+        for fusion_file in input_files:
+            if os.path.basename(fusion_file).startswith(NGI_name):
+                sample_files.append(fusion_file)
+        outfile="{}.fusion_comparison.txt".format(NGI_name)
+        read_files_store_data(sample_files,outfile)
+
 
 def make_report(star_dict, fc_dict, output_file):
     content=str()
@@ -69,13 +88,13 @@ def make_report(star_dict, fc_dict, output_file):
             gene_fc_only.append(gene_A)
         if gene_B not in star_dict:
             gene_fc_only.append(gene_B)
-    content +="##BOTH,STAR-FUSION,FUSIONCATCHER\n"
+    content +="##FUSIONCATCHER\tSTAR-FUSION\tBOTH\n"
     maxlen = max([len(l) for l in [gene_in_both,gene_star_only,gene_fc_only]])
     for idx in range(0, maxlen-1):
-	astr = gene_in_both[idx] if len(gene_in_both) > idx else ''
-	bstr = gene_star_only[idx] if len(gene_star_only) > idx else ''
-	cstr = gene_fc_only[idx] if len(gene_fc_only) > idx else ''
-	content += "{}\t{}\t{}\n".format(astr, bstr, cstr)    
+	both_str = gene_in_both[idx] if len(gene_in_both) > idx else ''
+	star_str = gene_star_only[idx] if len(gene_star_only) > idx else ''
+	fc_str = gene_fc_only[idx] if len(gene_fc_only) > idx else ''
+	content += "{}\t{}\t{}\n".format(fc_str, star_str, both_str)    
  
     with open(output_file, 'w') as f:
         f.write(content)
@@ -93,4 +112,5 @@ if __name__ == "__main__":
                                    help="File to save output to. ")
     args = parser.parse_args() 
     #merge_files(args.input_dir, args.dest_dir)
+    group_NGI_files(args.input_files,args.output_file)
     read_files_store_data(args.input_files,args.output_file)
