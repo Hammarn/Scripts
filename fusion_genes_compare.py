@@ -6,8 +6,7 @@ import sys
 
 
 def read_files_store_data(input_files,output_file):
-    star_dict={}
-    fc_dict={}
+    fusion_dict={}
     for input_file in input_files:
         if input_file.endswith("star-fusion.fusion_candidates.final.abridged"):
            #We have a star fusion file
@@ -20,10 +19,13 @@ def read_files_store_data(input_files,output_file):
                     else:
                         fusion=line.split("\t")[0]
                         # If we want to store to metadata then that can be inserted here
-                        fusion=fusion.split("--")
-                        fusion=[item.rstrip() for item in fusion]
-                        star_dict[fusion[0]]=fusion[1]
-            #print star_dict
+                        #fusion=[item.rstrip() for item in fusion]
+                        #star_dict[fusion[0]]=fusion[1]
+                        if fusion in fusion_dict.keys():
+                            fusion_dict[fusion]='Both'
+                        else:
+                            fusion_dict[fusion]='STAR'
+
         elif input_file.endswith("summary_candidate_fusions.txt"):
            
             #We have a Fusion catcher file
@@ -34,13 +36,16 @@ def read_files_store_data(input_files,output_file):
                         #import pdb
                         #pdb.set_trace()
                         fusion=line.split(" ")[3]
-                        fusion=fusion.split("--")
-                        fusion=[item.rstrip() for item in fusion]
-                        fc_dict[fusion[0]]=fusion[1]
+                        #fusion=[item.rstrip() for item in fusion]
+                        if fusion in fusion_dict.keys():
+                            fusion_dict[fusion]='Both'
+                        else:
+                            fusion_dict[fusion]='FusionCatcher'
+                        #fc_dict[fusion[0]]=fusion[1]
 
         else:
            print"Found file with incorect file ending, omitting file {}".format(input_file)
-    make_report(star_dict, fc_dict, output_file)
+    make_report(fusion_dict, output_file)
 
 
 def group_NGI_files(input_files,outputfile):
@@ -63,32 +68,37 @@ def group_NGI_files(input_files,outputfile):
         read_files_store_data(sample_files,outfile)
 
 
-def make_report(star_dict, fc_dict, output_file):
+def make_report(fusion_dict, output_file):
     content=str()
-    content+="## Number of Fusion genes detected with STAR-fusion: {} \n".format(len(star_dict))
-    content+="## Number of Fusion genes detected with FusionCatcher: {} \n".format(len(fc_dict))
     gene_in_both=[]
     gene_star_only=[]
     gene_fc_only=[]
+    
+    len_fc=0
+    len_star=0
 
-    for gene_A,gene_B in star_dict.items():
-        if gene_B in fc_dict:
-            gene_in_both.append(gene_B)
-        if gene_A not in fc_dict:
-            gene_star_only.append(gene_A)
-        if gene_B not in fc_dict:
-            gene_star_only.append(gene_B)
-
-    for gene_A,gene_B in fc_dict.items():
-        if gene_A in star_dict:
-            gene_in_both.append(gene_A)
-        if gene_B in star_dict:
-            gene_in_both.append(gene_B)
-        if gene_A not in star_dict:
-            gene_fc_only.append(gene_A)
-        if gene_B not in star_dict:
-            gene_fc_only.append(gene_B)
+    for fusion_gene in fusion_dict.keys():
+        if fusion_dict[fusion_gene] == 'Both':
+            gene_in_both.append(fusion_gene)
+            len_fc+=1
+            len_star+=1
+        elif fusion_dict[fusion_gene] == 'STAR':
+            gene_star_only.append(fusion_gene)
+            len_star+=1
+        elif fusion_dict[fusion_gene] == 'FusionCatcher':
+            gene_fc_only.append(fusion_gene)
+            len_fc+=1
+    import pdb
+    pdb.set_trace()
+    
+    content+="## Number of Fusion genes detected with STAR-fusion: {} \n".format(len_star)
+    content+="## Number of Fusion genes detected with FusionCatcher: {} \n".format(len_fc)
     content +="##FUSIONCATCHER\tSTAR-FUSION\tBOTH\n"
+    ##cleanup
+    gene_in_both=[item.rstrip() for item in gene_in_both]
+    gene_star_only=[item.rstrip() for item in gene_star_only]
+    gene_fc_only=[item.rstrip() for item in gene_fc_only]
+    
     maxlen = max([len(l) for l in [gene_in_both,gene_star_only,gene_fc_only]])
     for idx in range(0, maxlen-1):
 	both_str = gene_in_both[idx] if len(gene_in_both) > idx else ''
