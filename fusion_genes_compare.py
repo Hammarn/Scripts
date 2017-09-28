@@ -10,7 +10,6 @@ def read_files_store_data(input_files,output_file):
     for input_file in input_files:
         if input_file.endswith("star-fusion.fusion_candidates.final.abridged"):
            #We have a star fusion file
-           # Send to STAR fusion dict
             with open(input_file, 'r') as f:
                 for line in f:
                     if line.startswith("#"):
@@ -19,29 +18,21 @@ def read_files_store_data(input_files,output_file):
                     else:
                         fusion=line.split("\t")[0]
                         # If we want to store to metadata then that can be inserted here
-                        #fusion=[item.rstrip() for item in fusion]
-                        #star_dict[fusion[0]]=fusion[1]
                         if fusion in fusion_dict.keys():
                             fusion_dict[fusion]='Both'
                         else:
                             fusion_dict[fusion]='STAR'
 
         elif input_file.endswith("summary_candidate_fusions.txt"):
-           
             #We have a Fusion catcher file
-           # Send to FusionCatcher dict
             with open(input_file, 'r') as f:
                 for line in f:
                     if line.startswith("  * "):
-                        #import pdb
-                        #pdb.set_trace()
                         fusion=line.split(" ")[3]
-                        #fusion=[item.rstrip() for item in fusion]
                         if fusion in fusion_dict.keys():
                             fusion_dict[fusion]='Both'
                         else:
                             fusion_dict[fusion]='FusionCatcher'
-                        #fc_dict[fusion[0]]=fusion[1]
 
         else:
            print"Found file with incorect file ending, omitting file {}".format(input_file)
@@ -88,8 +79,6 @@ def make_report(fusion_dict, output_file):
         elif fusion_dict[fusion_gene] == 'FusionCatcher':
             gene_fc_only.append(fusion_gene)
             len_fc+=1
-    import pdb
-    pdb.set_trace()
     
     content+="## Number of Fusion genes detected with STAR-fusion: {} \n".format(len_star)
     content+="## Number of Fusion genes detected with FusionCatcher: {} \n".format(len_fc)
@@ -108,10 +97,6 @@ def make_report(fusion_dict, output_file):
  
     with open(output_file, 'w') as f:
         f.write(content)
-     
-     
-   
-
 
 
 if __name__ == "__main__":
