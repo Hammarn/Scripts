@@ -1,5 +1,10 @@
-#!bin/bash
+#!/bin/bash
 
+
+if [ ! -f ${1}.map ]; then
+    echo "${1}.map not found - generating it"
+    plink --bfile $1 --recode --out $1
+fi
 
 #exclude 0 and sex chr
 rm exlist; touch exlist
