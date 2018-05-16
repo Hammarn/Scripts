@@ -1,6 +1,6 @@
 #!/bin/bash
-
-basename=1$
+echo $1
+basename=$1
 
 
 module load bioinfo-tools
@@ -15,5 +15,5 @@ grep -P "\tT\tA" $basename>> variants_to_remove
 grep -P "\tC\tG" $basename>> variants_to_remove
 grep -P "\tG\tC" $basename>> variants_to_remove
 
-plink --bfile $basename --exclude variants_to_remove --make-bed --out ${$basename}_cleaned~
+plink --bfile $basename --exclude variants_to_remove --make-bed --out ./${basename}_cleaned
 
