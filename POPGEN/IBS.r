@@ -11,6 +11,9 @@ if (length(args)==0) {
 data1<- read.table (args[1], header = T)
 data2<-sort(data1$PI_HAT, decreasing = TRUE)
 
+output<-paste( "IBS_proportion_",args[1], ".pdf" , sep ="")
+pdf(output)
+
 plot(data2, cex=0.8, pch = 20, col="aquamarine4")
 title("IBS_proportion")
-dev2bitmap(paste("IBS_proportion_",args[1],".pdf", sep=""), type="pdfwrite")
+
