@@ -29,9 +29,8 @@ for item in data:
     for i_ in data[item]:
         #Only the denominator needs to be float to get a float as output
         output_dict[item].append(i_/float(s_))
-
 output=str()
 with open(output_file, 'w') as f:
     for indv in original_order:
-        f.write(indv +' '+ ' '.join(str(p) for p in output_dict[original_order[0]]) + '\n')
+        f.write(indv +' '+ ' '.join(str(p) for p in output_dict[indv]) + '\n')
 
