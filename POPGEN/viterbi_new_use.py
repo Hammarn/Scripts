@@ -8,7 +8,7 @@ from collections import OrderedDict
 
 
 
-def read_viterbi(viterbi_file, chr_nr):
+def read_viterbi(chr_n, vriterbi_file ):
     viterbi = viterbi_file
     chr_dict = OrderdDict()
     counter=0
@@ -26,11 +26,17 @@ def read_viterbi(viterbi_file, chr_nr):
     
     return chr_dict
 
-def handle_input files(files):
+def handle_input_files(files):
     # Figure out which chr we are working with and return them in order
-    pattern = re.compile('chr\d+')
-    
-    return file_order
+    chr_pat = re.compile('chr\d+')
+    chr_nm_pat re.compile('\d+')
+    file_dict = {}
+    for f in files:
+        full_name =  os.path.basename(f)
+        chr_plus_nm = chr_pat.search(f).group(1)
+        chr_nm = chr_nm_pat.search(chr_plus_nm)
+        file_dict[chr_nm] = full_name
+    return file_dict
 
 if __name__ == "__main__":
     # Command line arguments
@@ -43,7 +49,9 @@ help="Map file with genomic positions. Needs to contain the substring 'chrxx' wh
 
     args = vars(parser.parse_args())
 
-    
-    
-    # Repeat fr each chrom
+    file_dict =  handle_input_files(args.v) 
+    count_dict = {}
+    for chr_num in range(1,23) #22 chr
+        count_dict[chr_nm] = read_viterbi(chr_num, file_dict[chr_num])
+
 
