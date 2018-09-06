@@ -39,7 +39,7 @@ python /home/mariov/DataSets/sashay_away_dataset/duplicate_tfam.py < stw6.fam.or
 cut -d' ' -f1,2 counts_tfamdup | sed "s/_A$//g" | sed "s/_B$//g" > counts_ID
 
 for c in {1..22}; do 
-paste counts_ID counts_per_line_${c} | sed "s/\t/ /g" | cut -d' ' -f2,4,5,6,7,8 > counts_withID_chr${c}
+paste counts_ID counts_per_line_${c} | sed "s/\t/ /g" | cut -d' ' -f2,4,5,6,7,8,9 > counts_withID_chr${c}
 echo ${c}
 done
 

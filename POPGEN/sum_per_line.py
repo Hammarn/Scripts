@@ -13,11 +13,10 @@ except:
 
 with open(input_file, 'r') as f:
     read_data = f.readlines()
-
 data={}
 original_order=[]
 for line in read_data:
-    line_list = line.rstrip().split(" ")
+    line_list = line.rstrip().split("\t")
     #Map to turn it into a list of ints instead of str
     data[line_list[0]]=map(int,line_list[1:])
     original_order.append(line_list[0])

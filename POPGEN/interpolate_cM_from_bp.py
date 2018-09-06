@@ -21,7 +21,7 @@ gmapdata = vstack((zeros(3) , array([line.strip().split() for line in file(cmmap
 
 print 'interpolating data...'
 
-hapmap_cms = interp1d(gmapdata[:,0],gmapdata[:,2])
+hapmap_cms = interp1d(gmapdata[:,0],gmapdata[:,2],bounds_error=False)
 interp_cms = hapmap_cms(bps)
 print 'writing output...'
 savetxt(outfilename , interp_cms , fmt='%.6f' , delimiter='\n')
