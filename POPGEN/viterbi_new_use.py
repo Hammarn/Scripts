@@ -3,14 +3,23 @@ import sys
 import re
 import pdb
 import os
+import argparse
+import plotly
+import plotly.plotly as py
+#import plotly.offline as py
+import plotly.graph_objs as go
+import plotly.figure_factory as ff
+import plotly.io as pio
 
+import numpy as np
 from collections import OrderedDict
 
+#plotly.io.orca.config.executable ='/home/richam/miniconda2/envs/master/bin/orca'
+pio.orca.config.executable ='/home/richam/miniconda2/envs/master/bin/orca'
 
-
-def read_viterbi(chr_n, vriterbi_file ):
+def read_viterbi(viterbi_file):
     viterbi = viterbi_file
-    chr_dict = OrderdDict()
+    chr_dict = OrderedDict()
     counter=0
     with open (viterbi, 'r') as f:
         for line in f:
@@ -19,39 +28,91 @@ def read_viterbi(chr_n, vriterbi_file ):
             two = line.count('2')
             three = line.count('3')
             four = line.count('4')
-            five = line.count('5')
-            six = line.count('6')
-            counter +=1 
-            chr_dict[counter]=[one,two,three,four,five,six]
+            #five = line.count('5')
+            #six = line.count('6')
+            counter +=1
+            sum_nu = sum((one,two,three,four))
+            chr_dict[counter]=[one/float(sum_nu),two/float(sum_nu),three/float(sum_nu),four/float(sum_nu)]
     
     return chr_dict
 
 def handle_input_files(files):
     # Figure out which chr we are working with and return them in order
     chr_pat = re.compile('chr\d+')
-    chr_nm_pat re.compile('\d+')
+    chr_nm_pat = re.compile('\d+')
     file_dict = {}
     for f in files:
-        full_name =  os.path.basename(f)
-        chr_plus_nm = chr_pat.search(f).group(1)
-        chr_nm = chr_nm_pat.search(chr_plus_nm)
+        full_name =  os.path.abspath(f)
+        chr_plus_nm = chr_pat.search(f).group(0)
+        chr_nm = chr_nm_pat.search(chr_plus_nm).group(0)
         file_dict[chr_nm] = full_name
     return file_dict
+
+def plotting(count_dict):
+    # Each key is a CHR
+    names = ['CEU', 'CDX', 'YRI', 'Khoisan']
+    for key in count_dict:
+            data = []
+            Source_1 = []
+            Source_2 = []
+            Source_3 = []
+            Source_4 = []
+            Pos = [] 
+            # Each i is a line in Viterbi-file i.e. a SNP
+            for i in range(1,len(count_dict[key])+1):
+                Pos.append(i)
+                Source_1.append(count_dict[key][i][0])
+                Source_2.append(count_dict[key][i][1])
+                Source_3.append(count_dict[key][i][2])
+                Source_4.append(count_dict[key][i][3])
+            #One trace per Source population 
+            for i in range(1,5):
+                local_vars = vars()
+                data.append(go.Scattergl(
+                name = names[i-1],
+                x = Pos,
+                y = local_vars['Source_{}'.format(i)]
+                ))
+
+    layout = dict(showlegend=True)
+    fig = dict(data=data, layout=layout)
+    py.iplot(fig, filename='WebGL_line')
+    pdb.set_trace(,)
+    pio.write_image(fig, 'fig1.svg')
+    py.offline.plot(fig, filename='name.html')
+    # Make these be defined on the CL later
+    #hist_data = [Source_1, Source_2, Source_3, Source_4]
+    #pdb.set_trace()
+    #group_labels = ['CEU', 'CDX', 'YRI', 'Khoisan']
+    #colors = ['#835AF1', '#7FA6EE', '#B8F7D4'] 
+    #layout = go.Layout(barmode='stack')
+    #fig = go.Figure(data = hist_data, layout=layout, )
+    #py.iplot(fig, filename='Introgression_per_chr_AFR') 
+    
+    ## Subplots - make one "trace" for each chr?
+    #fig = tools.make_subplots(rows=1, cols=2)
+
+    #fig.append_trace(trace1, 1, 1)
+    #fig.append_trace(trace2, 1, 2)
+
 
 if __name__ == "__main__":
     # Command line arguments
     parser = argparse.ArgumentParser("Make a scatter plot of FPKM counts between conditions")
-    parser.add_argument("-v", "--viterbi", nargs = '+'
+    parser.add_argument("-v", "--viterbi", nargs = '+',
 help="Viterbi output files from RFMix. Needs to contain the substring 'chrxx' where xx is the chromosome number")
-    parser.add_argument("-m", "--map", nargs = '+'
+    parser.add_argument("-m", "--map", nargs = '+',
 help="Map file with genomic positions. Needs to contain the substring 'chrxx' where xx is the chromosome number")
 
 
-    args = vars(parser.parse_args())
-
-    file_dict =  handle_input_files(args.v) 
+    args = parser.parse_args()
+    file_dict =  handle_input_files(args.viterbi) 
     count_dict = {}
-    for chr_num in range(1,23) #22 chr
-        count_dict[chr_nm] = read_viterbi(chr_num, file_dict[chr_num])
+    #for chr_num in range(1,23): #22 chr
+    chr_num = 1  #22 chr
+    print "Reading results for chr {}".format(chr_num)
+    count_dict[chr_num] = read_viterbi(file_dict[str(chr_num)])
 
-
+    plotting(count_dict) 
+    pdb.set_trace()
+    print "hej"
