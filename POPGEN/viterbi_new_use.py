@@ -5,6 +5,7 @@ import pdb
 import os
 import argparse
 import plotly
+from plotly import tools
 import plotly.plotly as py
 #import plotly.offline as py
 import plotly.graph_objs as go
@@ -51,8 +52,9 @@ def handle_input_files(files):
 def plotting(count_dict):
     # Each key is a CHR
     names = ['CEU', 'CDX', 'YRI', 'Khoisan']
+    data_dict =  {}
     for key in count_dict:
-            data = []
+            data_dict[key] = []
             Source_1 = []
             Source_2 = []
             Source_3 = []
@@ -68,14 +70,19 @@ def plotting(count_dict):
             #One trace per Source population 
             for i in range(1,5):
                 local_vars = vars()
-                data.append(go.Scattergl(
+                data_dict[key] = (go.Scattergl(
                 name = names[i-1],
                 x = Pos,
                 y = local_vars['Source_{}'.format(i)]
                 ))
 
-    layout = dict(showlegend=True)
-    fig = dict(data=data, layout=layout)
+    fig = tools.make_subplots(rows=1, cols=22)
+    pdb.set_trace()
+    for chr_num in data_dict:
+        fig.append_trace(data_dict[chr_num] , 1, chr_num)  
+
+    #layout = dict(showlegend=True)
+    #fig = dict(data=data, layout=layout)
     py.iplot(fig, filename='WebGL_line')
     pdb.set_trace()
     pio.write_image(fig, 'fig1.svg')
@@ -95,6 +102,42 @@ def plotting(count_dict):
     #fig.append_trace(trace1, 1, 1)
     #fig.append_trace(trace2, 1, 2)
 
+def smooth_line_data(data, numpoints, sumcounts=True):
+    """
+    Stolen from MultiQC
+    Function to take an x-y dataset and use binning to
+    smooth to a maximum number of datapoints.
+    """
+    smoothed = {}
+    for s_name, d in data.items():
+
+        # Check that we need to smooth this data
+        if len(d) <= numpoints:
+            smoothed[s_name] = d
+            continue
+
+        smoothed[s_name] = OrderedDict();
+        p = 0
+        binsize = len(d) / numpoints
+        if binsize < 1:
+            binsize = 1
+        binvals = []
+        for x in sorted(d):
+            y = d[x]
+            if p < binsize:
+                binvals.append(y)
+                p += 1
+            else:
+                if sumcounts is True:
+                    v = sum(binvals)
+                else:
+                    v = sum(binvals) / binsize
+                smoothed[s_name][x] = v
+                p = 0
+                binvals = []
+    return smoothed
+
+
 
 if __name__ == "__main__":
     # Command line arguments
@@ -108,11 +151,9 @@ help="Map file with genomic positions. Needs to contain the substring 'chrxx' wh
     args = parser.parse_args()
     file_dict =  handle_input_files(args.viterbi) 
     count_dict = {}
-    #for chr_num in range(1,23): #22 chr
-    chr_num = 1  #22 chr
-    print "Reading results for chr {}".format(chr_num)
-    count_dict[chr_num] = read_viterbi(file_dict[str(chr_num)])
-
+    for chr_num in range(1,23): #22 chr
+    #chr_num = 1  #22 chr
+        print "Reading results for chr {}".format(chr_num)
+        count_dict[chr_num] = read_viterbi(file_dict[str(chr_num)])
     plotting(count_dict) 
-    pdb.set_trace()
     print "hej"
