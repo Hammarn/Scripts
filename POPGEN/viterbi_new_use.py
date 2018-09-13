@@ -77,7 +77,7 @@ def plotting(count_dict):
     layout = dict(showlegend=True)
     fig = dict(data=data, layout=layout)
     py.iplot(fig, filename='WebGL_line')
-    pdb.set_trace(,)
+    pdb.set_trace()
     pio.write_image(fig, 'fig1.svg')
     py.offline.plot(fig, filename='name.html')
     # Make these be defined on the CL later
