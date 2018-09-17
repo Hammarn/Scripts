@@ -4,19 +4,14 @@ import re
 import pdb
 import os
 import argparse
-import plotly
-from plotly import tools
-import plotly.plotly as py
-#import plotly.offline as py
-import plotly.graph_objs as go
-import plotly.figure_factory as ff
-import plotly.io as pio
+import matplotlib
 
+import matplotlib.pyplot as plt
 import numpy as np
 from collections import OrderedDict
 
 #plotly.io.orca.config.executable ='/home/richam/miniconda2/envs/master/bin/orca'
-pio.orca.config.executable ='/home/richam/miniconda2/envs/master/bin/orca'
+#pio.orca.config.executable ='/home/richam/miniconda3/envs/master/bin/orca'
 
 def read_viterbi(viterbi_file):
     viterbi = viterbi_file
@@ -67,45 +62,39 @@ def plotting(count_dict):
                 Source_2.append(count_dict[key][i][1])
                 Source_3.append(count_dict[key][i][2])
                 Source_4.append(count_dict[key][i][3])
-            #One trace per Source population 
+             
+            data_dict[key] = {}
             for i in range(1,5):
                 local_vars = vars()
-                data_dict[key] = {}
-                pdb.set_trace()
-                data_dict[key][i] = (go.Scattergl(
-                name = names[i-1],
-                x = Pos,
-                y = local_vars['Source_{}'.format(i)]
-                ))
+                data_dict[key][i] = {}
+                data_dict[key][i]['name'] = names[i-1],
+                data_dict[key][i]['x'] = np.array(Pos)
+                data_dict[key][i]['y'] = np.array(local_vars['Source_{}'.format(i)])
+                
+### ACtual plotting here
+    #fig = plt.figure()  # an empty figure with no axes
+    #fig.suptitle('Source contributions across the genome')  # Add a title so we know which it is
+    
+    order = np.arange(int(len(count_dict[key])))
 
-    fig = tools.make_subplots(rows=1, cols=22)
-    for chr_num in range(1,23):
-        pdb.set_trace()
-        fig.append_trace(data_dict[1][chr_num] , 1, chr_num)  
-        fig.append_trace(data_dict[2][chr_num] , 1, chr_num)  
-        fig.append_trace(data_dict[3][chr_num] , 1, chr_num)  
-        fig.append_trace(data_dict[4][chr_num] , 1, chr_num)  
+    CEU = plt.bar(order, data_dict[key][1]['y']) 
+    CDX = plt.bar(order, data_dict[key][2]['y'])
+    YRI = plt.bar(order, data_dict[key][3]['y'])
+    Khoisan = plt.bar(order, data_dict[key][4]['y'])
+    
+    plt.yticks(np.arange(0, 1))
+    plt.legend((CEU[0], CDX[0], YRI[0], Khoisan[0]), ('CEU', 'CDX', 'YRI', 'Khoisan'))
+    plt.savefig('foo.png', bbox_inches='tight')#plt.show()
+
+    #for chr_num in range(1,23):
+        #fig.append_trace(data_dict[1][chr_num] , 1, chr_num)  
+        #fig.append_trace(data_dict[2][chr_num] , 1, chr_num)  
+        #fig.append_trace(data_dict[3][chr_num] , 1, chr_num)  
+        #fig.append_trace(data_dict[4][chr_num] , 1, chr_num)  
 
     #layout = dict(showlegend=True)
     #fig = dict(data=data, layout=layout)
-    py.iplot(fig, filename='WebGL_line')
-    pdb.set_trace()
-    pio.write_image(fig, 'fig1.svg')
-    py.offline.plot(fig, filename='name.html')
-    # Make these be defined on the CL later
-    #hist_data = [Source_1, Source_2, Source_3, Source_4]
-    #pdb.set_trace()
     #group_labels = ['CEU', 'CDX', 'YRI', 'Khoisan']
-    #colors = ['#835AF1', '#7FA6EE', '#B8F7D4'] 
-    #layout = go.Layout(barmode='stack')
-    #fig = go.Figure(data = hist_data, layout=layout, )
-    #py.iplot(fig, filename='Introgression_per_chr_AFR') 
-    
-    ## Subplots - make one "trace" for each chr?
-    #fig = tools.make_subplots(rows=1, cols=2)
-
-    #fig.append_trace(trace1, 1, 1)
-    #fig.append_trace(trace2, 1, 2)
 
 def smooth_line_data(data, numpoints, sumcounts=True):
     """
