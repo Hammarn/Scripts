@@ -70,16 +70,21 @@ def plotting(count_dict):
             #One trace per Source population 
             for i in range(1,5):
                 local_vars = vars()
-                data_dict[key] = (go.Scattergl(
+                data_dict[key] = {}
+                pdb.set_trace()
+                data_dict[key][i] = (go.Scattergl(
                 name = names[i-1],
                 x = Pos,
                 y = local_vars['Source_{}'.format(i)]
                 ))
 
     fig = tools.make_subplots(rows=1, cols=22)
-    pdb.set_trace()
-    for chr_num in data_dict:
-        fig.append_trace(data_dict[chr_num] , 1, chr_num)  
+    for chr_num in range(1,23):
+        pdb.set_trace()
+        fig.append_trace(data_dict[1][chr_num] , 1, chr_num)  
+        fig.append_trace(data_dict[2][chr_num] , 1, chr_num)  
+        fig.append_trace(data_dict[3][chr_num] , 1, chr_num)  
+        fig.append_trace(data_dict[4][chr_num] , 1, chr_num)  
 
     #layout = dict(showlegend=True)
     #fig = dict(data=data, layout=layout)
