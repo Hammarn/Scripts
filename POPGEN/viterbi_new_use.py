@@ -4,14 +4,17 @@ import re
 import pdb
 import os
 import argparse
-import matplotlib
-
-import matplotlib.pyplot as plt
+import pandas as pd 
 import numpy as np
 from collections import OrderedDict
 
-#plotly.io.orca.config.executable ='/home/richam/miniconda2/envs/master/bin/orca'
-#pio.orca.config.executable ='/home/richam/miniconda3/envs/master/bin/orca'
+from bokeh.io import show, output_file
+from bokeh.plotting import figure
+from bokeh.palettes import Spectral5
+#from bokeh.sampledata.autompg import autompg_clean as df
+from bokeh.transform import factor_cmap
+
+
 
 def read_viterbi(viterbi_file):
     viterbi = viterbi_file
@@ -50,51 +53,41 @@ def plotting(count_dict):
     data_dict =  {}
     for key in count_dict:
             data_dict[key] = []
-            Source_1 = []
-            Source_2 = []
-            Source_3 = []
-            Source_4 = []
+            CEU = []
+            CDX = []
+            YRI = []
+            Khoisan = []
             Pos = [] 
             # Each i is a line in Viterbi-file i.e. a SNP
             for i in range(1,len(count_dict[key])+1):
                 Pos.append(i)
-                Source_1.append(count_dict[key][i][0])
-                Source_2.append(count_dict[key][i][1])
-                Source_3.append(count_dict[key][i][2])
-                Source_4.append(count_dict[key][i][3])
+                CEU.append(count_dict[key][i][0])
+                CDX.append(count_dict[key][i][1])
+                YRI.append(count_dict[key][i][2])
+                Khoisan.append(count_dict[key][i][3])
              
-            data_dict[key] = {}
-            for i in range(1,5):
-                local_vars = vars()
-                data_dict[key][i] = {}
-                data_dict[key][i]['name'] = names[i-1],
-                data_dict[key][i]['x'] = np.array(Pos)
-                data_dict[key][i]['y'] = np.array(local_vars['Source_{}'.format(i)])
-                
-### ACtual plotting here
-    #fig = plt.figure()  # an empty figure with no axes
-    #fig.suptitle('Source contributions across the genome')  # Add a title so we know which it is
-    
-    order = np.arange(int(len(count_dict[key])))
+            data_dict[key] = {'CEU' : pd.Series(CEU, index = Pos),
+                'CDX' : pd.Series(CDX, index = Pos),
+                'YRI' : pd.Series(YRI, index = Pos),
+                'Khoisan' : pd.Series(Khoisan, index = Pos),
+                'Chromosome' : key }
+            
+            data_dict[key] = pd.DataFrame(data_dict[key])    
 
-    CEU = plt.bar(order, data_dict[key][1]['y']) 
-    CDX = plt.bar(order, data_dict[key][2]['y'])
-    YRI = plt.bar(order, data_dict[key][3]['y'])
-    Khoisan = plt.bar(order, data_dict[key][4]['y'])
-    
-    plt.yticks(np.arange(0, 1))
-    plt.legend((CEU[0], CDX[0], YRI[0], Khoisan[0]), ('CEU', 'CDX', 'YRI', 'Khoisan'))
-    plt.savefig('foo.png', bbox_inches='tight')#plt.show()
+### Actual plotting here
+    data =  pd.concat([data_dict[key] for key in  data_dict.keys()])
+    p = figure(title="Genome average introgression", output_backend="webgl")
+    p.xaxis.axis_label = 'Genomic position'
+    p.yaxis.axis_label = 'Genome proportion'
+    key=1 
+    p.circle(x = data_dict[key].index.values, y = data_dict[key]['CEU'], color = "grey"  )
+    p.circle(x = data_dict[key].index.values, y = data_dict[key]['CDX'], color = "skyblue"  )
+    p.circle(x = data_dict[key].index.values, y = data_dict[key]['YRI'], color = "goldenrod"  )
+    p.circle(x = data_dict[key].index.values, y = data_dict[key]['Khoisan'], color = "salmon"  )
+     
+    pdb.set_trace()    
+    show(p)
 
-    #for chr_num in range(1,23):
-        #fig.append_trace(data_dict[1][chr_num] , 1, chr_num)  
-        #fig.append_trace(data_dict[2][chr_num] , 1, chr_num)  
-        #fig.append_trace(data_dict[3][chr_num] , 1, chr_num)  
-        #fig.append_trace(data_dict[4][chr_num] , 1, chr_num)  
-
-    #layout = dict(showlegend=True)
-    #fig = dict(data=data, layout=layout)
-    #group_labels = ['CEU', 'CDX', 'YRI', 'Khoisan']
 
 def smooth_line_data(data, numpoints, sumcounts=True):
     """
