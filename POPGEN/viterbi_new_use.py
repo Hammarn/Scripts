@@ -7,13 +7,13 @@ import argparse
 import pandas as pd 
 import numpy as np
 from collections import OrderedDict
-
-from bokeh.io import show, output_file
-from bokeh.plotting import figure
+from bokeh.layouts import row, gridplot
+from bokeh.io import  export_svgs, export_png, show, output_file 
+from bokeh.plotting import figure, save
 from bokeh.palettes import Spectral5
 #from bokeh.sampledata.autompg import autompg_clean as df
 from bokeh.transform import factor_cmap
-
+from selenium import webdriver
 
 
 def read_viterbi(viterbi_file):
@@ -76,17 +76,41 @@ def plotting(count_dict):
 
 ### Actual plotting here
     data =  pd.concat([data_dict[key] for key in  data_dict.keys()])
-    p = figure(title="Genome average introgression", output_backend="webgl")
-    p.xaxis.axis_label = 'Genomic position'
-    p.yaxis.axis_label = 'Genome proportion'
-    key=1 
-    p.circle(x = data_dict[key].index.values, y = data_dict[key]['CEU'], color = "grey"  )
-    p.circle(x = data_dict[key].index.values, y = data_dict[key]['CDX'], color = "skyblue"  )
-    p.circle(x = data_dict[key].index.values, y = data_dict[key]['YRI'], color = "goldenrod"  )
-    p.circle(x = data_dict[key].index.values, y = data_dict[key]['Khoisan'], color = "salmon"  )
-     
-    pdb.set_trace()    
-    show(p)
+    #p = figure(title="Genome average introgression", output_backend="webgl")
+    #p.xaxis.axis_label = 'Genomic position'
+    #p.yaxis.axis_label = 'Genome proportion'
+    #key=1 
+    
+
+    for key in data_dict.keys():
+        local_vars = vars()
+        local_vars['p{}'.format(key)] = figure(plot_height=500, plot_width=500 )
+        local_vars['p{}'.format(key)].circle(x = data_dict[key].index.values, y = data_dict[key]['CEU'], color = "grey"  )
+        local_vars['p{}'.format(key)].circle(x = data_dict[key].index.values, y = data_dict[key]['CDX'], color = "skyblue"  )
+        local_vars['p{}'.format(key)].circle(x = data_dict[key].index.values, y = data_dict[key]['YRI'], color = "goldenrod"  )
+        local_vars['p{}'.format(key)].circle(x = data_dict[key].index.values, y = data_dict[key]['Khoisan'], color = "salmon"  )
+    plot_list = [local_vars['p{}'.format(i)] for i in data_dict.keys()]
+    p = row(plot_list)
+
+    #Selenium stuff
+    #options = webdriver.ChromeOptions()
+    #options.binary_location = "/home/richam/bin/chromedriver"
+    #options.add_argument('headless')
+    #webdriver = webdriver.Chrome(chrome_options=options)
+    #self.webdriver = webdriver.Chrome(executable_path=find_executable('chromedriver'),
+    #                                          chrome_options=options)
+
+    #export_svgs(p, filename="Rfmix_intro.svg")
+    #export_png(p, filename="Rfmix_intro.png", webdriver=self.webdriver)
+    output_file("Rfmix_introgression.html")
+    save(p)
+    #p = figure(title="Genome average introgression", output_backend="webgl")
+    #p.xaxis.axis_label = 'Genomic position'
+    #p.yaxis.axis_label = 'Genome proportion'
+    pdb.set_trace()  
+    
+    grid = gridplot(plot_list, plot_width=250, plot_height=250)
+    show(grid)
 
 
 def smooth_line_data(data, numpoints, sumcounts=True):
