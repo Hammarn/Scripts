@@ -51,7 +51,7 @@ def plotting(count_dict):
     # Each key is a CHR
     names = ['CEU', 'CDX', 'YRI', 'Khoisan']
     data_dict =  {}
-    for key in count_dict:
+    for key in count_dict.keys():
             data_dict[key] = []
             CEU = []
             CDX = []
@@ -82,19 +82,21 @@ def plotting(count_dict):
     #key=1 
     
 
-    for key in data_dict.keys():
+    ## Make sure we are accessing the chromosomes in the correct order
+    for key in range(1,23):
+        print "Buildind subplot {}".format(key)
         local_vars = vars()
-        local_vars['p{}'.format(key)] = figure(plot_height=500, plot_width=500 )
-        local_vars['p{}'.format(key)].circle(x = data_dict[key].index.values, y = data_dict[key]['CEU'], color = "grey"  )
-        local_vars['p{}'.format(key)].circle(x = data_dict[key].index.values, y = data_dict[key]['CDX'], color = "skyblue"  )
-        local_vars['p{}'.format(key)].circle(x = data_dict[key].index.values, y = data_dict[key]['YRI'], color = "goldenrod"  )
-        local_vars['p{}'.format(key)].circle(x = data_dict[key].index.values, y = data_dict[key]['Khoisan'], color = "salmon"  )
+        local_vars['p{}'.format(key)] = figure(plot_height=500, plot_width=500, output_backend="webgl", title="Chromosome {}".format(key) )
+        local_vars['p{}'.format(key)].circle(x = data_dict[key].index.values, y = data_dict[key]['CEU'], color = "grey", legend = 'CEU'  )
+        local_vars['p{}'.format(key)].circle(x = data_dict[key].index.values, y = data_dict[key]['CDX'], color = "skyblue", legend = 'CDX'  )
+        local_vars['p{}'.format(key)].circle(x = data_dict[key].index.values, y = data_dict[key]['YRI'], color = "goldenrod", legend = 'YRI'  )
+        local_vars['p{}'.format(key)].circle(x = data_dict[key].index.values, y = data_dict[key]['Khoisan'], color = "salmon", legend = 'Khoisan'  )
     plot_list = [local_vars['p{}'.format(i)] for i in data_dict.keys()]
+    #Make one figure out of the 22 subplots
     p = row(plot_list)
 
     #Selenium stuff
     #options = webdriver.ChromeOptions()
-    #options.binary_location = "/home/richam/bin/chromedriver"
     #options.add_argument('headless')
     #webdriver = webdriver.Chrome(chrome_options=options)
     #self.webdriver = webdriver.Chrome(executable_path=find_executable('chromedriver'),
@@ -103,14 +105,14 @@ def plotting(count_dict):
     #export_svgs(p, filename="Rfmix_intro.svg")
     #export_png(p, filename="Rfmix_intro.png", webdriver=self.webdriver)
     output_file("Rfmix_introgression.html")
+    print "Saving to output - this could take a while.."
     save(p)
     #p = figure(title="Genome average introgression", output_backend="webgl")
     #p.xaxis.axis_label = 'Genomic position'
     #p.yaxis.axis_label = 'Genome proportion'
-    pdb.set_trace()  
     
-    grid = gridplot(plot_list, plot_width=250, plot_height=250)
-    show(grid)
+    #grid = gridplot(plot_list, plot_width=250, plot_height=250)
+    #show(grid)
 
 
 def smooth_line_data(data, numpoints, sumcounts=True):
@@ -160,11 +162,13 @@ help="Map file with genomic positions. Needs to contain the substring 'chrxx' wh
 
 
     args = parser.parse_args()
-    file_dict =  handle_input_files(args.viterbi) 
+    viterbi_dict =  handle_input_files(args.viterbi) 
+    map_dict = handle_input_files(args.map)
+
     count_dict = {}
     for chr_num in range(1,23): #22 chr
     #chr_num = 1  #22 chr
         print "Reading results for chr {}".format(chr_num)
-        count_dict[chr_num] = read_viterbi(file_dict[str(chr_num)])
+        count_dict[chr_num] = read_viterbi(viterbi_dict[str(chr_num)])
     plotting(count_dict) 
     print "hej"
