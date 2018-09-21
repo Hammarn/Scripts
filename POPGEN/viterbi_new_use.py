@@ -12,8 +12,19 @@ from bokeh.io import  export_svgs, export_png, show, output_file
 from bokeh.plotting import figure, save
 from bokeh.palettes import Spectral5
 #from bokeh.sampledata.autompg import autompg_clean as df
-from bokeh.transform import factor_cmap
-from selenium import webdriver
+
+
+def handle_input_files(files):
+    # Figure out which chr we are working with and return them in order
+    chr_pat = re.compile('chr\d+')
+    chr_nm_pat = re.compile('\d+')
+    file_dict = {}
+    for f in files:
+        full_name =  os.path.abspath(f)
+        chr_plus_nm = chr_pat.search(f).group(0)
+        chr_nm = chr_nm_pat.search(chr_plus_nm).group(0)
+        file_dict[chr_nm] = full_name
+    return file_dict
 
 
 def read_viterbi(viterbi_file):
@@ -35,19 +46,25 @@ def read_viterbi(viterbi_file):
     
     return chr_dict
 
-def handle_input_files(files):
-    # Figure out which chr we are working with and return them in order
-    chr_pat = re.compile('chr\d+')
-    chr_nm_pat = re.compile('\d+')
-    file_dict = {}
-    for f in files:
-        full_name =  os.path.abspath(f)
-        chr_plus_nm = chr_pat.search(f).group(0)
-        chr_nm = chr_nm_pat.search(chr_plus_nm).group(0)
-        file_dict[chr_nm] = full_name
-    return file_dict
 
-def plotting(count_dict):
+def read_genetic_bim(bim_file):
+    bim = bim_file 
+    position_dict = OrderedDict()
+    with open (bim, 'r') as f:
+        for counter,line in enumerate(f):
+            position_dict[counter] = line.split("\t")[3]
+            
+    return position_dict
+
+def filter_away_telemomers():
+    """
+    takes in viterbi counts and genmic position in bps and return filtered counts
+    """
+    return 
+
+def plotting(count_dict, bp_dict):
+    count_dict = count_dict
+    bp_dict = bp_dict
     # Each key is a CHR
     names = ['CEU', 'CDX', 'YRI', 'Khoisan']
     data_dict =  {}
@@ -71,7 +88,7 @@ def plotting(count_dict):
                 'YRI' : pd.Series(YRI, index = Pos),
                 'Khoisan' : pd.Series(Khoisan, index = Pos),
                 'Chromosome' : key }
-            
+            pdb.set_trace()         
             data_dict[key] = pd.DataFrame(data_dict[key])    
 
 ### Actual plotting here
@@ -79,40 +96,29 @@ def plotting(count_dict):
     #p = figure(title="Genome average introgression", output_backend="webgl")
     #p.xaxis.axis_label = 'Genomic position'
     #p.yaxis.axis_label = 'Genome proportion'
-    #key=1 
     
-
-    ## Make sure we are accessing the chromosomes in the correct order
-    for key in range(1,23):
-        print "Buildind subplot {}".format(key)
-        local_vars = vars()
-        local_vars['p{}'.format(key)] = figure(plot_height=500, plot_width=500, output_backend="webgl", title="Chromosome {}".format(key) )
-        local_vars['p{}'.format(key)].circle(x = data_dict[key].index.values, y = data_dict[key]['CEU'], color = "grey", legend = 'CEU'  )
-        local_vars['p{}'.format(key)].circle(x = data_dict[key].index.values, y = data_dict[key]['CDX'], color = "skyblue", legend = 'CDX'  )
-        local_vars['p{}'.format(key)].circle(x = data_dict[key].index.values, y = data_dict[key]['YRI'], color = "goldenrod", legend = 'YRI'  )
-        local_vars['p{}'.format(key)].circle(x = data_dict[key].index.values, y = data_dict[key]['Khoisan'], color = "salmon", legend = 'Khoisan'  )
-    plot_list = [local_vars['p{}'.format(i)] for i in data_dict.keys()]
-    #Make one figure out of the 22 subplots
-    p = row(plot_list)
-
-    #Selenium stuff
-    #options = webdriver.ChromeOptions()
-    #options.add_argument('headless')
-    #webdriver = webdriver.Chrome(chrome_options=options)
-    #self.webdriver = webdriver.Chrome(executable_path=find_executable('chromedriver'),
-    #                                          chrome_options=options)
+    def subplot():
+        ## Make sure we are accessing the chromosomes in the correct order
+        for key in range(1,23):
+            print "Buildind subplot {}".format(key)
+            local_vars = vars()
+            local_vars['p{}'.format(key)] = figure(plot_height=500, plot_width=500, output_backend="webgl", title="Chromosome {}".format(key) )
+            local_vars['p{}'.format(key)].circle(x = data_dict[key].index.values, y = data_dict[key]['CEU'], color = "grey", legend = 'CEU'  )
+            local_vars['p{}'.format(key)].circle(x = data_dict[key].index.values, y = data_dict[key]['CDX'], color = "skyblue", legend = 'CDX'  )
+            local_vars['p{}'.format(key)].circle(x = data_dict[key].index.values, y = data_dict[key]['YRI'], color = "goldenrod", legend = 'YRI'  )
+            local_vars['p{}'.format(key)].circle(x = data_dict[key].index.values, y = data_dict[key]['Khoisan'], color = "salmon", legend = 'Khoisan'  )
+        plot_list = [local_vars['p{}'.format(i)] for i in data_dict.keys()]
+        #Make one figure out of the 22 subplots
+        p = row(plot_list)
+        output_file("Rfmix_introgression.html")
+        print "Saving to output - this could take a while.."
+        save(p)
+    
+    subplot()
+    
 
     #export_svgs(p, filename="Rfmix_intro.svg")
     #export_png(p, filename="Rfmix_intro.png", webdriver=self.webdriver)
-    output_file("Rfmix_introgression.html")
-    print "Saving to output - this could take a while.."
-    save(p)
-    #p = figure(title="Genome average introgression", output_backend="webgl")
-    #p.xaxis.axis_label = 'Genomic position'
-    #p.yaxis.axis_label = 'Genome proportion'
-    
-    #grid = gridplot(plot_list, plot_width=250, plot_height=250)
-    #show(grid)
 
 
 def smooth_line_data(data, numpoints, sumcounts=True):
@@ -156,19 +162,27 @@ if __name__ == "__main__":
     # Command line arguments
     parser = argparse.ArgumentParser("Make a scatter plot of FPKM counts between conditions")
     parser.add_argument("-v", "--viterbi", nargs = '+',
-help="Viterbi output files from RFMix. Needs to contain the substring 'chrxx' where xx is the chromosome number")
-    parser.add_argument("-m", "--map", nargs = '+',
-help="Map file with genomic positions. Needs to contain the substring 'chrxx' where xx is the chromosome number")
+help="Viterbi output files from RFMix. Needs to contain the substring 'chrxx' where xx is the chromosome number in the filename")
+    parser.add_argument("-b", "--bim", nargs = '+',
+help="Bim file with genomic positions. Needs to contain the substring 'chrxx' where xx is the chromosome number in the filename")
 
 
     args = parser.parse_args()
     viterbi_dict =  handle_input_files(args.viterbi) 
-    map_dict = handle_input_files(args.map)
+    bim_dict = handle_input_files(args.bim)
 
     count_dict = {}
     for chr_num in range(1,23): #22 chr
     #chr_num = 1  #22 chr
         print "Reading results for chr {}".format(chr_num)
         count_dict[chr_num] = read_viterbi(viterbi_dict[str(chr_num)])
-    plotting(count_dict) 
-    print "hej"
+    
+    bp_dict = {} 
+    for chr_num in range(1,23): #22 chr
+    #chr_num = 1  #22 chr
+        print "Reading results for chr {}".format(chr_num)
+        bp_dict[chr_num] = read_genetic_bim(bim_dict[str(chr_num)])
+    
+    
+    plotting(count_dict, bp_dict) 
+    print "Goodbye"
