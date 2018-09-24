@@ -56,10 +56,21 @@ def read_genetic_bim(bim_file):
             
     return position_dict
 
-def filter_away_telemomers():
+def filter_away_telemomers(viterbi_dict, bim_dict):
     """
     takes in viterbi counts and genmic position in bps and return filtered counts
     """
+    for vit_num in range(1,23):
+        vit_file = viterbi_dict[str(vit_num)]
+        with open (vit_file, 'r') as v:
+             
+            for bim_num in range(1,23):
+                bim_file = bim_dict[str(bim_num)]
+                with open (bim_file, 'r') as b:
+                    pdb.set_trace()
+
+
+### replace with counts dict??
     return 
 
 def plotting(count_dict, bp_dict):
@@ -170,7 +181,11 @@ help="Bim file with genomic positions. Needs to contain the substring 'chrxx' wh
     args = parser.parse_args()
     viterbi_dict =  handle_input_files(args.viterbi) 
     bim_dict = handle_input_files(args.bim)
-
+    
+    
+    # Do the filtering here?
+    viterbi_dict =  filter_away_telemomers(viterbi_dict, bim_dict) 
+    
     count_dict = {}
     for chr_num in range(1,23): #22 chr
     #chr_num = 1  #22 chr
