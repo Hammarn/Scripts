@@ -51,7 +51,7 @@ def read_genetic_bim(bim_file):
     bim = bim_file 
     position_dict = OrderedDict()
     with open (bim, 'r') as f:
-        for counter,line in enumerate(f):
+        for counter,line in enumerate(f, start = 1):
             position_dict[counter] = line.split("\t")[3]
             
     return position_dict
@@ -71,11 +71,21 @@ def filter_away_telemomers(count_dict, bp_dict):
         
         last = int(bp_dict[vit_num].items()[-1][1]) 
         last = last - filter_value
-        # {k: v for k, v in points.iteritems() if v[0] < 5 and v[1] < 5}
-        d3 = {k : v for k,v in count_dict[vit_num].iteritems() if v < last and v > first}
                 
-        pdb.set_trace()
-        print "hej"
+        
+        print "{}".format(len(count_dict[vit_num])) 
+        ## pop instead of making a new library
+        print "Filtering away telomeric regions for chr {} this could take a while".format(vit_num) 
+        for key in bp_dict[vit_num].keys():
+          #  pdb.set_trace()
+            if not  int(bp_dict[vit_num][key]) > first or not int(bp_dict[vit_num][key])  < last:
+                #keep.append(key)
+                count_dict[vit_num].pop(key)
+
+    return
+
+
+
 ### replace with counts dict??
     return count_dict
 
