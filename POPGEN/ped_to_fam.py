@@ -38,7 +38,7 @@ def write_fam(data_dict, fam_name):
     
     with open(fam_name, 'w') as f:
         for key in data_dict.keys():
-            f.write('{} {} {} {} -9\n'.format( data_dict[key][6],data_dict[key][1],data_dict[key][2],data_dict[key][3] ))
+            f.write('{} {} {} {} {} -9\n'.format( data_dict[key][6],data_dict[key][1],data_dict[key][2],data_dict[key][3],data_dict[key][4] ))
 
 
 if __name__ == "__main__":
