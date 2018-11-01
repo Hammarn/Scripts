@@ -1,5 +1,4 @@
 #!/bin/bash
-module load bioinfo-tools plink
 
 if [ ! -f ${1}.map ]; then
     echo "${1}.map not found - generating it"

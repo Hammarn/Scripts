@@ -20,5 +20,5 @@ plink --bfile ${basename}_cleaned_1 --mind 0.05 --make-bed --out ${basename}_cle
 
 plink --bfile ${basename}_cleaned_2 --geno 0.1 --make-bed --out ${basename}_cleaned
 
-rm ${basename}_cleaned_1
-rm ${basename}_cleaned_2
+rm ${basename}_cleaned_1*
+rm ${basename}_cleaned_2*

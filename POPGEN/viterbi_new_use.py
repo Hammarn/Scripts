@@ -10,12 +10,11 @@ import numpy as np
 from math import pi
 
 from collections import OrderedDict
-from bokeh.models import Axis,Range1d
+from bokeh.models import Axis,Range1d, HoverTool
 from bokeh.layouts import row, gridplot
 from bokeh.io import  export_svgs, export_png, show, output_file 
 from bokeh.plotting import figure, save
 from bokeh.palettes import Spectral5
-#from bokeh.sampledata.autompg import autompg_clean as df
 
 
 def handle_input_files(files):
@@ -60,6 +59,7 @@ def read_genetic_bim(bim_file):
             
     return position_dict
 
+
 def filter_away_telemomers(count_dict, bp_dict):
     """
     takes in viterbi counts and genmic position in bps and return filtered counts
@@ -70,9 +70,9 @@ def filter_away_telemomers(count_dict, bp_dict):
         items  = count_dict[vit_num]
         items_to_keep = []    
         
-        first =  int(bp_dict[vit_num][1]) 
-        first = first + filter_value
-        
+        #first =  int(bp_dict[vit_num][1]) 
+        #first = first + filter_value
+        first = filter_value
         last = int(bp_dict[vit_num].items()[-1][1]) 
         last = last - filter_value
                 
@@ -133,48 +133,34 @@ def plotting(count_dict, bp_dict):
         ## Make sure we are accessing the chromosomes in the correct order
         for key in range(1,23):
             print "Building subplot {}".format(key)
+            TOOLTIPS=[
+                #( "index", "$index"      ),
+                ( 'X',   '$x'            ),
+                ( 'Y',   '$y'            ),
+            ]
             local_vars = vars()
-            local_vars['p{}'.format(key)] = figure(plot_height=500, plot_width=500, output_backend="webgl", title="Chromosome {}".format(key) )
-            local_vars['p{}'.format(key)].circle(x = data_dict[key].index.values, y = data_dict[key]['CEU'], color = "grey", legend = 'CEU'  )
-            local_vars['p{}'.format(key)].circle(x = data_dict[key].index.values, y = data_dict[key]['CDX'], color = "skyblue", legend = 'CDX'  )
-            local_vars['p{}'.format(key)].circle(x = data_dict[key].index.values, y = data_dict[key]['YRI'], color = "goldenrod", legend = 'YRI'  )
-            local_vars['p{}'.format(key)].circle(x = data_dict[key].index.values, y = data_dict[key]['Khoisan'], color = "salmon", legend = 'Khoisan'  )
+            local_vars['p{}'.format(key)] = figure(plot_height=500, plot_width=500, output_backend="webgl", title="Chromosome {}".format(key))
+            local_vars['p{}'.format(key)].circle(x = data_dict[key].index.values, y = data_dict[key]['CEU'], color = "grey"   )
+            local_vars['p{}'.format(key)].circle(x = data_dict[key].index.values, y = data_dict[key]['CDX'], color = "skyblue"  )
+            local_vars['p{}'.format(key)].circle(x = data_dict[key].index.values, y = data_dict[key]['YRI'], color = "goldenrod"  )
+            local_vars['p{}'.format(key)].circle(x = data_dict[key].index.values, y = data_dict[key]['Khoisan'], color = "salmon"  )
             local_vars['p{}'.format(key)].xaxis.major_label_orientation = "vertical"
             local_vars['p{}'.format(key)].xaxis[0].formatter.use_scientific = False
             local_vars['p{}'.format(key)].xaxis[0].ticker = [int(data_dict[key].first_valid_index()) ,int(data_dict[key].last_valid_index())]
             local_vars['p{}'.format(key)].x_range = Range1d(int(data_dict[key].first_valid_index()) ,int(data_dict[key].last_valid_index()))
             
-            output_file("Rf_chr{}.html".format(key))
-            save(local_vars['p{}'.format(key)])
-            #local_vars['p{}'.format(key)].x_range = Range1d(int(data_dict[key].idxmin()[0]), int(data_dict[key].idxmax()[0]))
-            #loical_vars['p{}'.format(key)].x_range = Range1d(2000000, int(data_dict[key].idxmax()[0]))
+
+            #output_file("Rf_chr{}.html".format(key))
+            export_svgs(local_vars['p{}'.format(key)], filename="Rfmix_intro_{}.svg".format(key))
+            #save(local_vars['p{}'.format(key)])
                 
         
         plot_list = [local_vars['p{}'.format(i)] for i in data_dict.keys()]
         #Make one figure out of the 22 subplots
-        
-        p = row(plot_list)
+        p =gridplot(plot_list, ncols=10) 
+        #p = row(plot_list)
        
          
-        p.add_tools(HoverTool(
-        tooltips=[
-            ( 'date',   '@date{%F}'            ),
-            ( 'close',  '$@{adj close}{%0.2f}' ), # use @{ } for field names with spaces
-            ( 'volume', '@volume{0.00 a}'      ),
-        ],
-
-        formatters={
-            'date'      : 'datetime', # use 'datetime' formatter for 'date' field
-            'adj close' : 'printf',   # use 'printf' formatter for 'adj close' field
-                                      # use default 'numeral' formatter for other fields
-        },
-
-        # display a tooltip whenever the cursor is vertically in line with a glyph
-        mode='vline'
-        )) 
-
-
-
 
 
         output_file("Rfmix_introgression.html")
@@ -186,43 +172,6 @@ def plotting(count_dict, bp_dict):
 
     #export_svgs(p, filename="Rfmix_intro.svg")
     #export_png(p, filename="Rfmix_intro.png", webdriver=self.webdriver)
-
-
-def smooth_line_data(data, numpoints, sumcounts=True):
-    """
-    Stolen from MultiQC
-    Function to take an x-y dataset and use binning to
-    smooth to a maximum number of datapoints.
-    """
-    smoothed = {}
-    for s_name, d in data.items():
-
-        # Check that we need to smooth this data
-        if len(d) <= numpoints:
-            smoothed[s_name] = d
-            continue
-
-        smoothed[s_name] = OrderedDict();
-        p = 0
-        binsize = len(d) / numpoints
-        if binsize < 1:
-            binsize = 1
-        binvals = []
-        for x in sorted(d):
-            y = d[x]
-            if p < binsize:
-                binvals.append(y)
-                p += 1
-            else:
-                if sumcounts is True:
-                    v = sum(binvals)
-                else:
-                    v = sum(binvals) / binsize
-                smoothed[s_name][x] = v
-                p = 0
-                binvals = []
-    return smoothed
-
 
 
 if __name__ == "__main__":
