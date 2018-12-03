@@ -16,9 +16,16 @@ grep -P "\tG\tC" ${basename}.bim >> variants_to_remove
 
 plink --bfile $basename --exclude variants_to_remove --make-bed --out ./${basename}_cleaned_1
 
+echo 
+echo 
+
 plink --bfile ${basename}_cleaned_1 --mind 0.05 --make-bed --out ${basename}_cleaned_2
 
+echo 
+echo 
 plink --bfile ${basename}_cleaned_2 --geno 0.1 --make-bed --out ${basename}_cleaned
 
+echo 
+echo 
 rm ${basename}_cleaned_1*
 rm ${basename}_cleaned_2*
