@@ -3,10 +3,10 @@ import argparse
 import pandas as pd 
 
 
-def main(input_file, coefficient,output):
+def main(input_file, PropIBD,output):
     pd_data =  pd.read_csv(input_file, sep = "\t"  )
 
-    bigger =  pd_data.loc[pd_data['Kinship'] > coefficient ]
+    bigger =  pd_data.loc[pd_data['PropIBD'] > PropIBD]
     with open(output,'w') as w:
         for index, row in bigger.iterrows():
             w.write("{}\t{}\n".format(row['FID'],row['ID1']))
@@ -22,7 +22,7 @@ if __name__ == "__main__":
 help="Input file from king to analyse.")
     parser.add_argument("-o", "--output", default = 'indvs_to_remove_due_to_king_related.txt', 
 help="Name of Outputfile.")
-    parser.add_argument("-k", "--kinship", nargs = 1, default = 0.09,
-help="Kinship Coefficient to use. Default is 0.09")
+    parser.add_argument("-p", "--propIBD", nargs = 1, default = 0.09,
+help="Proportion of IBD  to use. Default is 0.09")
 args = parser.parse_args() 
-main(args.input,args.kinship, args.output)
+main(args.input,args.propIBD, args.output)
