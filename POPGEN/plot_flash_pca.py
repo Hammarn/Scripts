@@ -5,7 +5,8 @@ import pandas as pd
 from bokeh.plotting import figure, show, output_file
 from bokeh.core.properties import value
 from bokeh.palettes import all_palettes
-from bokeh.models import Legend, HoverTool
+from bokeh.models import Legend, HoverTool, LegendItem
+from bokeh.transform import linear_cmap
 #from bokeh.models import ColumnDataSource
 import pdb
 
@@ -18,22 +19,38 @@ def plotting(data):
     #data = ColumnDataSource(data)
     pops = list(pd.Series.unique(data['FID'])) 
     color =  all_palettes['Inferno'][256] 
+    #mapper = linear_cmap(field_name = pops, palette = all_palettes['Inferno'][256] )
+    markers = ["circle / o","square","triangle","asterisk / *","circle_x / ox","square_x","inverted_triangle","x","circle_cross / o+","square_cross","diamond","cross / +"]
+    #marker_dict = {}
+    #for i in range(pops):
+    #    for j in range(i):
+    #        marker_dict[j]=markers[j]
+    #    i += 12
 
-    fig = figure(title="PCA", toolbar_location=None, x_axis_label='PCA 1',y_axis_label='PCA 2',) 
+    fig = figure(title="PCA", toolbar_location=None, x_axis_label='PCA 1',y_axis_label='PCA 2',plot_width = 1000, plot_height = 1000 ) 
     #for counter,pop in enumerate(pops):
     counter = 0
+    figs = []
     for pop in pops:
     #    data.loc[data['FID'] == pop]
-        fig.circle(x = 'PC1', y = 'PC2', legend = 'FID' ,color =color[counter],   source = data.loc[data['FID'] == pop] ,  muted_alpha=0.2)    
+        figs.append( ( pop , [fig.circle(x = 'PC1', y = 'PC2', color =color[counter],   source = data.loc[data['FID'] == pop] ,  muted_alpha=0.2)])) 
+        
         counter += 2 
+
+    legend = Legend(items=figs, location = (10, -300))
+    fig.add_layout(legend, 'right')
     fig.legend.label_text_font_size = "8px" 
     fig.legend.click_policy="mute"
+    
     fig.add_tools(HoverTool(
         tooltips = [
             ('Population', '@FID'),
                 ]
             ))
+    
     show(fig, browser = "firefox")
+
+
 if __name__ == "__main__":
     # Command line arguments
     parser = argparse.ArgumentParser("Make a scatter plot of FPKM counts between conditions")
