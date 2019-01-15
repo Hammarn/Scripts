@@ -30,15 +30,24 @@ def plotting(data):
     fig = figure(title="PCA", toolbar_location=None, x_axis_label='PCA 1',y_axis_label='PCA 2',plot_width = 1000, plot_height = 1000 ) 
     #for counter,pop in enumerate(pops):
     counter = 0
-    figs = []
-    for pop in pops:
-    #    data.loc[data['FID'] == pop]
-        figs.append( ( pop , [fig.circle(x = 'PC1', y = 'PC2', color =color[counter],   source = data.loc[data['FID'] == pop] ,  muted_alpha=0.2)])) 
-        
-        counter += 2 
+    leg_1 = []
+    leg_2 = []
+    lenght_of_leg = len(pops)/2
+    two_columns = True
 
-    legend = Legend(items=figs, location = (10, -300))
-    fig.add_layout(legend, 'right')
+    for counter,pop in enumerate(pops):
+    #    data.loc[data['FID'] == pop]
+        if two_columns == True:
+            if counter < lenght_of_leg: 
+                leg_1.append( ( pop , [fig.circle(x = 'PC1', y = 'PC2', color =color[counter],   source = data.loc[data['FID'] == pop] ,  muted_alpha=0.2)])) 
+            else:
+                leg_2.append( ( pop , [fig.circle(x = 'PC1', y = 'PC2', color =color[counter],   source = data.loc[data['FID'] == pop] ,  muted_alpha=0.2)])) 
+
+    legend1 = Legend(items=leg_1, location = (20, 0))
+    legend2 = Legend(items=leg_2, location = (25, 0))
+    
+    fig.add_layout(legend1, 'left')
+    fig.add_layout(legend2, 'left')
     fig.legend.label_text_font_size = "8px" 
     fig.legend.click_policy="mute"
     
