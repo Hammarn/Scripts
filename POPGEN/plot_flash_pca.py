@@ -19,7 +19,6 @@ def plotting(data, output_name):
     output_name = output_name
     #data = ColumnDataSource(data)
     pops = list(pd.Series.unique(data['FID'])) 
-    pdb.set_trace()
     color =  all_palettes['Inferno'][256] 
     #mapper = linear_cmap(field_name = pops, palette = all_palettes['Inferno'][256] )
     markers = ["circle / o","square","triangle","asterisk / *","circle_x / ox","square_x","inverted_triangle","x","circle_cross / o+","square_cross","diamond","cross / +"]
