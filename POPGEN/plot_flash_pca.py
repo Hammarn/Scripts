@@ -28,8 +28,10 @@ def plotting(data, output_name):
     #        marker_dict[j]=markers[j]
     #    i += 12
     PCA_1_2 = ['PC1','PC2']
+    PCA_1_3 = ['PC1','PC3']
     PCA_3_4 = ['PC3','PC4']
     make_figure(PCA_1_2, output_name[0], pops, color, data)
+    make_figure(PCA_1_3, output_name[1], pops, color,data) 
     make_figure(PCA_3_4, output_name[1], pops, color,data) 
 
 def make_figure(PCS,output_name, pops, color, data) :
@@ -73,9 +75,11 @@ def make_figure(PCS,output_name, pops, color, data) :
 
 if __name__ == "__main__":
     # Command line arguments
-    parser = argparse.ArgumentParser("Make a scatter plot of FPKM counts between conditions")
+    parser = argparse.ArgumentParser("Make a scatter plot of Principal component analysis output form FlashPCA")
     parser.add_argument("-i", "--input", default = 'pcs.txt',
-    help="Plots PCA from flashca")
+    help="Name of inputfile")
+    parser.add_argument("-l", "--key",  
+    help="File with Population legend key")
 
     parser.add_argument("-o","--output", default = ["PCA1_vs_PCA2.html","PCA1_vs_PCA2.html"],
     help=  "Filename for the outputfile")
