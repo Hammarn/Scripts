@@ -19,19 +19,14 @@ def plotting(data, output_name, key):
     output_name = output_name
     #data = ColumnDataSource(data)
     key_info = {}
-    with open(key, 'r') as f:
-        for line in f:
-            key_info[line.split()[0]] =  " ".join(line.split()[1:])
+    if key:
+        with open(key, 'r') as f:
+            for line in f:
+                key_info[line.split()[0]] =  " ".join(line.split()[1:])
     
-    uniq_regions = set(key_info.values()) 
-    numer_of_regions = len(uniq_regions)
-    pdb.set_trace()
-#    regions =  
-
     pops = list(pd.Series.unique(data['FID'])) 
     color =  all_palettes['Inferno'][256] 
     #mapper = linear_cmap(field_name = pops, palette = all_palettes['Inferno'][256] )
-    markers = ["circle","square","triangle","asterisk","circle_x","square_x","inverted_triangle","x","circle_cross","square_cross","diamond","cross"]
     #marker_dict = {}
     #for i in range(pops):
     #    for j in range(i):
@@ -40,12 +35,17 @@ def plotting(data, output_name, key):
     PCA_1_2 = ['PC1','PC2']
     PCA_1_3 = ['PC1','PC3']
     PCA_3_4 = ['PC3','PC4']
-    make_figure(PCA_1_2, output_name[0], pops, color,data)
-    make_figure(PCA_1_3, output_name[1], pops, color,data) 
-    make_figure(PCA_3_4, output_name[1], pops, color,data) 
+    make_figure(PCA_1_2, output_name[0], pops, color,data, key_info)
+    make_figure(PCA_1_3, output_name[1], pops, color,data, key_info) 
+    make_figure(PCA_3_4, output_name[1], pops, color,data, key_info) 
 
-def make_figure(PCS,output_name, pops, color, data) :
+def make_figure(PCS,output_name, pops, color, data, key_info) :
     fig = figure(title="PCA", toolbar_location=None, x_axis_label=PCS[0],y_axis_label=PCS[1],plot_width = 1000, plot_height = 1000 ) 
+    if key_info: 
+        uniq_regions = set(key_info.values()) 
+        numer_of_regions = len(uniq_regions)
+        uniq_regions = list(uniq_regions)
+    
     #for counter,pop in enumerate(pops):
     colour_counter = 0
     leg_1 = []
@@ -54,16 +54,29 @@ def make_figure(PCS,output_name, pops, color, data) :
     two_columns = True
     
 
-    #pdb.set_trace()
+    markers = ["circle","square","triangle","asterisk","circle_x","square_x","inverted_triangle","x","circle_cross","square_cross","diamond","cross"]
+   
+    
+
+   #   key[pops]   
+    for key in key_info:
+        for marker in markers:
+            pdb.set_trace()
+            key_info[key] = key_info[key].split()
+            key_info[key].append(marker)
+         
     for counter,pop in enumerate(pops):
     #    data.loc[data['FID'] == pop]
-        if two_columns == True:
-            if counter < lenght_of_leg: 
-    #            pdb.set_trace()
-                leg_1.append( ( pop , [fig.circle(x = PCS[0], y = PCS[1], color =color[colour_counter], source = data.loc[data['FID'] == pop] ,  muted_alpha=0.2)])) 
-            else:
-                leg_2.append( ( pop , [fig.circle(x = PCS[0], y = PCS[1], color =color[colour_counter], source = data.loc[data['FID'] == pop] ,  muted_alpha=0.2)])) 
-        colour_counter += 2
+        
+        if counter < lenght_of_leg: 
+            #pdb.set_trace()
+            leg_1.append( ( pop , [eval("fig.{}".format(key_info[pop][-1:]))(x = PCS[0], y = PCS[1], color =color[colour_counter], source = data.loc[data['FID'] == pop] ,  muted_alpha=0.2)])) 
+        else:
+            leg_2.append( ( pop , [eval("fig.{}".format(key_info[pop][-1:]))(x = PCS[0], y = PCS[1], color =color[colour_counter], source = data.loc[data['FID'] == pop] ,  muted_alpha=0.2)])) 
+    colour_counter += 2
+
+
+
 
     legend1 = Legend(items=leg_1, location = (20, 20))
     legend2 = Legend(items=leg_2, location = (25,20))
