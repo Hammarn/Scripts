@@ -7,7 +7,7 @@ from bokeh.core.properties import value
 from bokeh.palettes import all_palettes
 from bokeh.models import Legend, HoverTool, LegendItem
 from bokeh.transform import linear_cmap
-#from bokeh.models import ColumnDataSource
+
 import pdb
 
 def read_input(input_file) :
@@ -15,13 +15,23 @@ def read_input(input_file) :
     return pd_data
 
 
-def plotting(data, output_name):
+def plotting(data, output_name, key):
     output_name = output_name
     #data = ColumnDataSource(data)
+    key_info = {}
+    with open(key, 'r') as f:
+        for line in f:
+            key_info[line.split()[0]] =  " ".join(line.split()[1:])
+    
+    uniq_regions = set(key_info.values()) 
+    numer_of_regions = len(uniq_regions)
+    pdb.set_trace()
+#    regions =  
+
     pops = list(pd.Series.unique(data['FID'])) 
     color =  all_palettes['Inferno'][256] 
     #mapper = linear_cmap(field_name = pops, palette = all_palettes['Inferno'][256] )
-    markers = ["circle / o","square","triangle","asterisk / *","circle_x / ox","square_x","inverted_triangle","x","circle_cross / o+","square_cross","diamond","cross / +"]
+    markers = ["circle","square","triangle","asterisk","circle_x","square_x","inverted_triangle","x","circle_cross","square_cross","diamond","cross"]
     #marker_dict = {}
     #for i in range(pops):
     #    for j in range(i):
@@ -30,7 +40,7 @@ def plotting(data, output_name):
     PCA_1_2 = ['PC1','PC2']
     PCA_1_3 = ['PC1','PC3']
     PCA_3_4 = ['PC3','PC4']
-    make_figure(PCA_1_2, output_name[0], pops, color, data)
+    make_figure(PCA_1_2, output_name[0], pops, color,data)
     make_figure(PCA_1_3, output_name[1], pops, color,data) 
     make_figure(PCA_3_4, output_name[1], pops, color,data) 
 
@@ -78,7 +88,7 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser("Make a scatter plot of Principal component analysis output form FlashPCA")
     parser.add_argument("-i", "--input", default = 'pcs.txt',
     help="Name of inputfile")
-    parser.add_argument("-l", "--key",  
+    parser.add_argument("-k", "--key",  
     help="File with Population legend key")
 
     parser.add_argument("-o","--output", default = ["PCA1_vs_PCA2.html","PCA1_vs_PCA2.html"],
@@ -89,4 +99,4 @@ if __name__ == "__main__":
 args = parser.parse_args()
 
 data = read_input(args.input)
-plotting(data, args.output)
+plotting(data, args.output, args.key)
