@@ -58,21 +58,19 @@ def make_figure(PCS,output_name, pops, color, data, key_info) :
    
     
 
-   #   key[pops]   
-    for key in key_info:
-        for marker in markers:
-            pdb.set_trace()
-            key_info[key] = key_info[key].split()
-            key_info[key].append(marker)
-         
+   #   key[pops]  
+    pdb.set_trace()
+    for counter, key in enumerate(key_info):
+        key_info[key] = "{} {}".format(key_info[key], markers[counter])
+             
     for counter,pop in enumerate(pops):
     #    data.loc[data['FID'] == pop]
         
         if counter < lenght_of_leg: 
-            #pdb.set_trace()
-            leg_1.append( ( pop , [eval("fig.{}".format(key_info[pop][-1:]))(x = PCS[0], y = PCS[1], color =color[colour_counter], source = data.loc[data['FID'] == pop] ,  muted_alpha=0.2)])) 
+            pdb.set_trace()
+            leg_1.append( ( pop , [eval("fig.{}".format(key_info[pop].split()[-1]))(x = PCS[0], y = PCS[1], color =color[colour_counter], source = data.loc[data['FID'] == pop] ,  muted_alpha=0.2)])) 
         else:
-            leg_2.append( ( pop , [eval("fig.{}".format(key_info[pop][-1:]))(x = PCS[0], y = PCS[1], color =color[colour_counter], source = data.loc[data['FID'] == pop] ,  muted_alpha=0.2)])) 
+            leg_2.append( ( pop , [eval("fig.{}".format(key_info[pop].split()[-1]))(x = PCS[0], y = PCS[1], color =color[colour_counter], source = data.loc[data['FID'] == pop] ,  muted_alpha=0.2)])) 
     colour_counter += 2
 
 
