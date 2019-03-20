@@ -57,13 +57,32 @@ def make_figure(PCS,output_name, pops, color, data, key_info) :
     markers = ["circle","square","triangle","asterisk","circle_x","square_x","inverted_triangle","x","circle_cross","square_cross","diamond","cross"]
 ### use dataframe instead of dict for storing the key info:
 ### YRI|"West Africa"|circle|color_num
-    
+    ### Iterate, maybe just set one world group to a marker ma manualy and then just do a lookup with iterrows? or some other     
 
    #   key[pops]  
     pdb.set_trace()
     ki= (pd.Series(key_info)).to_frame()
-      ## loop below, or use an if? https://stackoverflow.com/questions/23330654/update-a-dataframe-in-pandas-while-iterating-row-by-row
+    
+    def lookup_markers(value):
+        if value == 'East Asia':
+            return 'circle'
+        elif value == 'Eastern Africa':
+            return 'square'
+        elif value == 'Europe':
+            return "triangle"
+        elif value == 'Middle East':
+            return "asterisk"
+        elif value == 'Northern Africa':
+            return 'circle_x'
+        elif value == 'South East Asia':
+            return 'square_x'
+        elif value == 'Southern Africa':
+            return 'inverted_triangle'
+        elif value == 'Western Africa':
+            return 'x'
 
+    ki['marker'] = ki[].apply(lookup_markers)
+    
     for counter, key in enumerate(uniq_regions):
         key_info[key] = "{} {}".format(key_info[key], markers[counter])
              
@@ -75,7 +94,6 @@ def make_figure(PCS,output_name, pops, color, data, key_info) :
         else:
             leg_2.append( ( pop , [eval("fig.{}".format(key_info[pop].split()[-1]))(x = PCS[0], y = PCS[1], color =color[colour_counter], source = data.loc[data['FID'] == pop] ,  muted_alpha=0.2)])) 
     colour_counter += 2
-
 
     legend1 = Legend(items=leg_1, location = (20, 20))
     legend2 = Legend(items=leg_2, location = (25,20))
