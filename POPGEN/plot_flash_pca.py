@@ -17,7 +17,6 @@ def read_input(input_file) :
 
 def plotting(data, output_name, key):
     output_name = output_name
-    #data = ColumnDataSource(data)
     key_info = {}
     if key:
         with open(key, 'r') as f:
@@ -26,12 +25,6 @@ def plotting(data, output_name, key):
     
     pops = list(pd.Series.unique(data['FID'])) 
     color =  all_palettes['Inferno'][256] 
-    #mapper = linear_cmap(field_name = pops, palette = all_palettes['Inferno'][256] )
-    #marker_dict = {}
-    #for i in range(pops):
-    #    for j in range(i):
-    #        marker_dict[j]=markers[j]
-    #    i += 12
     PCA_1_2 = ['PC1','PC2']
     PCA_1_3 = ['PC1','PC3']
     PCA_3_4 = ['PC3','PC4']
@@ -46,7 +39,6 @@ def make_figure(PCS,output_name, pops, color, data, key_info) :
         numer_of_regions = len(uniq_regions)
         uniq_regions = list(uniq_regions)
     
-    #for counter,pop in enumerate(pops):
     colour_counter = 0
     leg_1 = []
     leg_2 = []
@@ -58,9 +50,6 @@ def make_figure(PCS,output_name, pops, color, data, key_info) :
 ### use dataframe instead of dict for storing the key info:
 ### YRI|"West Africa"|circle|color_num
     ### Iterate, maybe just set one world group to a marker ma manualy and then just do a lookup with iterrows? or some other     
-
-   #   key[pops]  
-    pdb.set_trace()
     ki= (pd.Series(key_info)).to_frame()
     
     def lookup_markers(value):
@@ -81,7 +70,8 @@ def make_figure(PCS,output_name, pops, color, data, key_info) :
         elif value == 'Western Africa':
             return 'x'
 
-    ki['marker'] = ki[].apply(lookup_markers)
+    pdb.set_trace()
+    ki['marker'] = ki[0].apply(lookup_markers)
     
     for counter, key in enumerate(uniq_regions):
         key_info[key] = "{} {}".format(key_info[key], markers[counter])
@@ -112,19 +102,16 @@ def make_figure(PCS,output_name, pops, color, data, key_info) :
     output_file(output_name)
     show(fig, browser = "firefox")
 
-
 if __name__ == "__main__":
     # Command line arguments
     parser = argparse.ArgumentParser("Make a scatter plot of Principal component analysis output form FlashPCA")
     parser.add_argument("-i", "--input", default = 'pcs.txt',
     help="Name of inputfile")
-    parser.add_argument("-k", "--key",  
+    parser.add_argument("-k", "--key",
     help="File with Population legend key")
-
     parser.add_argument("-o","--output", default = ["PCA1_vs_PCA2.html","PCA1_vs_PCA2.html"],
     help=  "Filename for the outputfile")
     
-
 
 args = parser.parse_args()
 
