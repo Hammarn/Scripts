@@ -49,7 +49,7 @@ def make_figure(PCS,output_name, pops, color, data, key_info) :
     markers = ["circle","square","triangle","asterisk","circle_x","square_x","inverted_triangle","x","circle_cross","square_cross","diamond","cross"]
 ### use dataframe instead of dict for storing the key info:
 ### YRI|"West Africa"|circle|color_num
-    ### Iterate, maybe just set one world group to a marker ma manualy and then just do a lookup with iterrows? or some other     
+    ### Iterate, maybe just set one world group to a marker ma manualy and then just do a lookup with iterrows?  or some other     Wolof.bed or some other     
     ki= (pd.Series(key_info)).to_frame()
     
     def lookup_markers(value):
@@ -69,21 +69,21 @@ def make_figure(PCS,output_name, pops, color, data, key_info) :
             return 'inverted_triangle'
         elif value == 'Western Africa':
             return 'x'
+        elif value == 'DRC':
+            return 'circle_cross'
 
-    pdb.set_trace()
     ki['marker'] = ki[0].apply(lookup_markers)
     
-    for counter, key in enumerate(uniq_regions):
-        key_info[key] = "{} {}".format(key_info[key], markers[counter])
+   # for counter, key in enumerate(uniq_regions):
+   #     key_info[key] = "{} {}".format(key_info[key], markers[counter])
              
     for counter,pop in enumerate(pops):
-     
-        if counter < lenght_of_leg: 
-            pdb.set_trace()
-            leg_1.append( ( pop , [eval("fig.{}".format(key_info[pop].split()[-1]))(x = PCS[0], y = PCS[1], color =color[colour_counter], source = data.loc[data['FID'] == pop] ,  muted_alpha=0.2)])) 
+
+        if counter < lenght_of_leg:
+            leg_1.append( ( pop , [eval("fig.{}".format( ki['marker'][pop]))(x = PCS[0], y = PCS[1], color =color[colour_counter], source = data.loc[data['FID'] == pop] ,  muted_alpha=0.2)])) 
         else:
-            leg_2.append( ( pop , [eval("fig.{}".format(key_info[pop].split()[-1]))(x = PCS[0], y = PCS[1], color =color[colour_counter], source = data.loc[data['FID'] == pop] ,  muted_alpha=0.2)])) 
-    colour_counter += 2
+            leg_2.append( ( pop , [eval("fig.{}".format(ki['marker'][pop]))(x = PCS[0], y = PCS[1], color =color[colour_counter], source = data.loc[data['FID'] == pop] ,  muted_alpha=0.2)])) 
+        colour_counter += 2
 
     legend1 = Legend(items=leg_1, location = (20, 20))
     legend2 = Legend(items=leg_2, location = (25,20))
