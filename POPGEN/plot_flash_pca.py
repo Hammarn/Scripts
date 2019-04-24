@@ -3,6 +3,7 @@ import argparse
 import pandas as pd
 #import bokeh
 from bokeh.plotting import figure, show, output_file
+from bokeh.layouts import column
 from bokeh.core.properties import value
 from bokeh.palettes import all_palettes
 from bokeh.models import Legend, HoverTool, LegendItem
@@ -25,15 +26,22 @@ def plotting(data, output_name, key):
     
     pops = list(pd.Series.unique(data['FID'])) 
     color =  all_palettes['Inferno'][256] 
-    PCA_1_2 = ['PC1','PC2']
-    PCA_1_3 = ['PC1','PC3']
-    PCA_3_4 = ['PC3','PC4']
-    make_figure(PCA_1_2, output_name[0], pops, color,data, key_info)
-    make_figure(PCA_1_3, output_name[1], pops, color,data, key_info) 
-    make_figure(PCA_3_4, output_name[1], pops, color,data, key_info) 
+    figures=[]
+    #make_figure(PCA_1_2, output_name[0], pops, color,data, key_info)
+    #make_figure(PCA_1_3, output_name[1], pops, color,data, key_info) 
+    figures.append(make_figure(['PC1','PC2'], output_name[1], pops, color,data, key_info) )
+    figures.append(make_figure(['PC2','PC3'], output_name[1], pops, color,data, key_info) )
+    figures.append(make_figure(['PC2','PC4'], output_name[1], pops, color,data, key_info) )
+    figures.append(make_figure(['PC3','PC4'], output_name[1], pops, color,data, key_info) )
+    figures.append(make_figure(['PC3','PC5'], output_name[1], pops, color,data, key_info) )
+    figures.append(make_figure(['PC3','PC6'], output_name[1], pops, color,data, key_info) )
 
+    p = column(figures)
+   
+    show(p)
 def make_figure(PCS,output_name, pops, color, data, key_info) :
-    fig = figure(title="PCA", toolbar_location=None, x_axis_label=PCS[0],y_axis_label=PCS[1],plot_width = 1000, plot_height = 1000 ) 
+    fig = figure(title="PCA", toolbar_location="above", x_axis_label=PCS[0],y_axis_label=PCS[1],plot_width = 1500, plot_height = 1000 ) 
+
     if key_info: 
         uniq_regions = set(key_info.values()) 
         numer_of_regions = len(uniq_regions)
@@ -76,13 +84,13 @@ def make_figure(PCS,output_name, pops, color, data, key_info) :
     
    # for counter, key in enumerate(uniq_regions):
    #     key_info[key] = "{} {}".format(key_info[key], markers[counter])
-             
-    for counter,pop in enumerate(pops):
+    ki = ki.sort_values(0)
+    for counter,pop in enumerate(ki.index.values):
 
         if counter < lenght_of_leg:
-            leg_1.append( ( pop , [eval("fig.{}".format( ki['marker'][pop]))(x = PCS[0], y = PCS[1], color =color[colour_counter], source = data.loc[data['FID'] == pop] ,  muted_alpha=0.2)])) 
+            leg_1.append( ( pop , [eval("fig.{}".format( ki['marker'][pop]))(x = PCS[0], y = PCS[1], color =color[colour_counter], size = 8, source = data.loc[data['FID'] == pop] ,  muted_alpha=0.2)])) 
         else:
-            leg_2.append( ( pop , [eval("fig.{}".format(ki['marker'][pop]))(x = PCS[0], y = PCS[1], color =color[colour_counter], source = data.loc[data['FID'] == pop] ,  muted_alpha=0.2)])) 
+            leg_2.append( ( pop , [eval("fig.{}".format(ki['marker'][pop]))(x = PCS[0], y = PCS[1], color =color[colour_counter], size = 8, source = data.loc[data['FID'] == pop] ,  muted_alpha=0.2)])) 
         colour_counter += 2
 
     legend1 = Legend(items=leg_1, location = (20, 20))
@@ -92,7 +100,7 @@ def make_figure(PCS,output_name, pops, color, data, key_info) :
     fig.add_layout(legend2, 'left')
     fig.legend.label_text_font_size = "8px" 
     fig.legend.click_policy="mute"
-    
+    fig.legend.label_text_font_size = '12pt' 
     fig.add_tools(HoverTool(
         tooltips = [
             ('Population', '@FID'),
@@ -100,7 +108,9 @@ def make_figure(PCS,output_name, pops, color, data, key_info) :
             ))
     
     output_file(output_name)
-    show(fig, browser = "firefox")
+    
+    return(fig)
+    #show(fig, browser = "firefox")
 
 if __name__ == "__main__":
     # Command line arguments
@@ -109,7 +119,7 @@ if __name__ == "__main__":
     help="Name of inputfile")
     parser.add_argument("-k", "--key",
     help="File with Population legend key")
-    parser.add_argument("-o","--output", default = ["PCA1_vs_PCA2.html","PCA1_vs_PCA2.html"],
+    parser.add_argument("-o","--output", default = ["PCA1_vs_PCA2.html","PCA_plots.html"],
     help=  "Filename for the outputfile")
     
 
