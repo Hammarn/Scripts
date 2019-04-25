@@ -81,12 +81,15 @@ def make_figure(PCS,output_name, pops, color, data, key_info) :
             return 'circle_cross'
 
     ki['marker'] = ki[0].apply(lookup_markers)
-    
+    #data['marker'] = data['region'].apply(lookup_markers)
    # for counter, key in enumerate(uniq_regions):
    #     key_info[key] = "{} {}".format(key_info[key], markers[counter])
     ki = ki.sort_values(0)
-    for counter,pop in enumerate(ki.index.values):
+    ki_re = ki.reset_index()
+    ki_re = ki_re.rename(columns={'index':'FID', 0:'Region'})
+    data = pd.merge(data, ki_re, on = ['FID'])
 
+    for counter,pop in enumerate(ki.index.values):
         if counter < lenght_of_leg:
             leg_1.append( ( pop , [eval("fig.{}".format( ki['marker'][pop]))(x = PCS[0], y = PCS[1], color =color[colour_counter], size = 8, source = data.loc[data['FID'] == pop] ,  muted_alpha=0.2)])) 
         else:
@@ -104,6 +107,7 @@ def make_figure(PCS,output_name, pops, color, data, key_info) :
     fig.add_tools(HoverTool(
         tooltips = [
             ('Population', '@FID'),
+            ('Region', '@Region'),
                 ]
             ))
     
