@@ -16,7 +16,7 @@ def read_input(input_file) :
     return pd_data
 
 
-def plotting(data, output_name, key):
+def plotting(data, output_name, key, legend):
     output_name = output_name
     key_info = {}
     if key:
@@ -29,19 +29,20 @@ def plotting(data, output_name, key):
     figures=[]
     #make_figure(PCA_1_2, output_name[0], pops, color,data, key_info)
     #make_figure(PCA_1_3, output_name[1], pops, color,data, key_info) 
-    figures.append(make_figure(['PC1','PC2'], output_name[1], pops, color,data, key_info) )
-    figures.append(make_figure(['PC2','PC3'], output_name[1], pops, color,data, key_info) )
-    figures.append(make_figure(['PC2','PC4'], output_name[1], pops, color,data, key_info) )
-    figures.append(make_figure(['PC3','PC4'], output_name[1], pops, color,data, key_info) )
-    figures.append(make_figure(['PC3','PC5'], output_name[1], pops, color,data, key_info) )
-    figures.append(make_figure(['PC3','PC6'], output_name[1], pops, color,data, key_info) )
+    figures.append(make_figure(['PC1','PC2'], output_name[1], pops, color,data, key_info, legend ))
+    figures.append(make_figure(['PC2','PC3'], output_name[1], pops, color,data, key_info, legend ))
+    figures.append(make_figure(['PC2','PC4'], output_name[1], pops, color,data, key_info, legend ))
+    figures.append(make_figure(['PC3','PC4'], output_name[1], pops, color,data, key_info, legend ))
+    figures.append(make_figure(['PC3','PC5'], output_name[1], pops, color,data, key_info, legend ))
+    figures.append(make_figure(['PC3','PC6'], output_name[1], pops, color,data, key_info, legend ))
 
     p = column(figures)
    
     show(p)
-def make_figure(PCS,output_name, pops, color, data, key_info) :
+def make_figure(PCS,output_name, pops, color, data, key_info, nu_legends) :
+    nu_legends = nu_legends
     fig = figure(title="PCA", toolbar_location="above", x_axis_label=PCS[0],y_axis_label=PCS[1],plot_width = 1500, plot_height = 1000 ) 
-
+ 
     if key_info: 
         uniq_regions = set(key_info.values()) 
         numer_of_regions = len(uniq_regions)
@@ -79,6 +80,10 @@ def make_figure(PCS,output_name, pops, color, data, key_info) :
             return 'x'
         elif value == 'DRC':
             return 'circle_cross'
+        elif value == 'wRHG':
+            return 'square_cross'
+        elif value == 'eRHG':
+            return 'diamond'
 
     ki['marker'] = ki[0].apply(lookup_markers)
     #data['marker'] = data['region'].apply(lookup_markers)
@@ -88,22 +93,34 @@ def make_figure(PCS,output_name, pops, color, data, key_info) :
     ki_re = ki.reset_index()
     ki_re = ki_re.rename(columns={'index':'FID', 0:'Region'})
     data = pd.merge(data, ki_re, on = ['FID'])
+    ### 2 legends
+    if nu_legends == 2:
+        for counter,pop in enumerate(ki.index.values):
+            if counter < lenght_of_leg:
+                leg_1.append( ( pop , [eval("fig.{}".format( ki['marker'][pop]))(x = PCS[0], y = PCS[1], color =color[colour_counter], size = 8, source = data.loc[data['FID'] == pop] ,  muted_alpha=0.2)])) 
+            else:
+                leg_2.append( ( pop , [eval("fig.{}".format(ki['marker'][pop]))(x = PCS[0], y = PCS[1], color =color[colour_counter], size = 8, source = data.loc[data['FID'] == pop] ,  muted_alpha=0.2)])) 
+            colour_counter += 2
 
-    for counter,pop in enumerate(ki.index.values):
-        if counter < lenght_of_leg:
-            leg_1.append( ( pop , [eval("fig.{}".format( ki['marker'][pop]))(x = PCS[0], y = PCS[1], color =color[colour_counter], size = 8, source = data.loc[data['FID'] == pop] ,  muted_alpha=0.2)])) 
-        else:
-            leg_2.append( ( pop , [eval("fig.{}".format(ki['marker'][pop]))(x = PCS[0], y = PCS[1], color =color[colour_counter], size = 8, source = data.loc[data['FID'] == pop] ,  muted_alpha=0.2)])) 
-        colour_counter += 2
-
-    legend1 = Legend(items=leg_1, location = (20, 20))
-    legend2 = Legend(items=leg_2, location = (25,20))
+        legend1 = Legend(items=leg_1, location = (20, 20))
+        legend2 = Legend(items=leg_2, location = (25,20))
+        fig.add_layout(legend1, 'left')
+        fig.add_layout(legend2, 'left')
+        fig.legend.label_text_font_size = '10pt' 
     
-    fig.add_layout(legend1, 'left')
-    fig.add_layout(legend2, 'left')
-    fig.legend.label_text_font_size = "8px" 
+    ## 1 legend, based on Region
+    
+    if nu_legends == 1:
+        for counter,region in enumerate(set(ki[0].values)):
+            leg_1.append( ( region , [eval("fig.{}".format(data[['Region','marker']].drop_duplicates().loc[data['Region']==region].values[0].item(1) ))(x = PCS[0], y = PCS[1], color =color[colour_counter], size = 8, source = data.loc[data['Region'] == region] ,  muted_alpha=0.2)])) 
+            colour_counter += 30 
+        legend1 = Legend(items=leg_1, location = (0, 400))
+        fig.add_layout(legend1, 'left')
+    
+        fig.legend.label_text_font_size = '20pt' 
+    
+    
     fig.legend.click_policy="mute"
-    fig.legend.label_text_font_size = '12pt' 
     fig.add_tools(HoverTool(
         tooltips = [
             ('Population', '@FID'),
@@ -125,9 +142,10 @@ if __name__ == "__main__":
     help="File with Population legend key")
     parser.add_argument("-o","--output", default = ["PCA1_vs_PCA2.html","PCA_plots.html"],
     help=  "Filename for the outputfile")
-    
+    parser.add_argument("-l","--legend", default = 1,
+    help=  "Display 1 legend with Regions or 2 with Pops")
 
 args = parser.parse_args()
 
 data = read_input(args.input)
-plotting(data, args.output, args.key)
+plotting(data, args.output, args.key, args.legend)
