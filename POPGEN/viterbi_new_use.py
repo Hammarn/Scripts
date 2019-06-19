@@ -12,7 +12,7 @@ from math import pi
 from collections import OrderedDict
 from bokeh.models import Axis,Range1d, HoverTool
 from bokeh.layouts import row, gridplot
-from bokeh.io import  export_svgs, export_png, show, output_file 
+from bokeh.io import  show, output_file 
 from bokeh.plotting import figure, save
 from bokeh.palettes import Spectral5
 
@@ -128,6 +128,11 @@ def plotting(count_dict, bp_dict):
     data =  pd.concat([data_dict[key] for key in  data_dict.keys()])
     #p.xaxis.axis_label = 'Genomic position'
     #p.yaxis.axis_label = 'Genome proportion'
+   
+    import pdb
+    pdb.set_trace()
+
+    subplot()
     
     def subplot():
         ## Make sure we are accessing the chromosomes in the correct order
@@ -151,7 +156,7 @@ def plotting(count_dict, bp_dict):
             
 
             #output_file("Rf_chr{}.html".format(key))
-            export_svgs(local_vars['p{}'.format(key)], filename="Rfmix_intro_{}.svg".format(key))
+            #export_svgs(local_vars['p{}'.format(key)], filename="Rfmix_intro_{}.svg".format(key))
             #save(local_vars['p{}'.format(key)])
                 
         
@@ -166,13 +171,6 @@ def plotting(count_dict, bp_dict):
         output_file("Rfmix_introgression.html")
         print "Saving to output - this could take a while.."
         save(p)
-    
-    subplot()
-    
-
-    #export_svgs(p, filename="Rfmix_intro.svg")
-    #export_png(p, filename="Rfmix_intro.png", webdriver=self.webdriver)
-
 
 if __name__ == "__main__":
     # Command line arguments
