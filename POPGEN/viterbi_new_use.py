@@ -49,6 +49,12 @@ def read_viterbi(viterbi_file):
     
     return chr_dict
 
+def read_FB(Fb_file):
+    Fb_file = Fb_file
+    FB = pd.read_csv(Fb_file, delimiter=" ", header = None)
+    #remove trailing whitespace, a bit crude though
+    FB = FB.dropna(how="any", axis='columns')
+    return FB
 
 def read_genetic_bim(bim_file):
     bim = bim_file 
@@ -90,11 +96,7 @@ def filter_away_telemomers(count_dict, bp_dict):
     return count_dict
 
 
-
-### replace with counts dict??
-    return count_dict
-
-def plotting(count_dict, bp_dict):
+def plotting(count_dict, bp_dict, FB_dict):
     count_dict = count_dict
     bp_dict = bp_dict
     # Each key is a CHR
@@ -131,6 +133,14 @@ def plotting(count_dict, bp_dict):
    
     import pdb
     pdb.set_trace()
+    #FB_dict
+    ## EXTRACTING stuff
+    ## each row is one SNP in both viterbi and FB
+    ## Find interesting viterbi rows
+    ## return the corresponding rows in FB, should be fine to print for now.
+    ## Threshold? if proporion CEU is < 95%??
+
+    ## need to add in 
 
     subplot()
     
@@ -167,7 +177,6 @@ def plotting(count_dict, bp_dict):
        
          
 
-
         output_file("Rfmix_introgression.html")
         print "Saving to output - this could take a while.."
         save(p)
@@ -179,25 +188,35 @@ if __name__ == "__main__":
 help="Viterbi output files from RFMix. Needs to contain the substring 'chrxx' where xx is the chromosome number in the filename")
     parser.add_argument("-b", "--bim", nargs = '+',
 help="Bim file with genomic positions. Needs to contain the substring 'chrxx' where xx is the chromosome number in the filename")
-
+    parser.add_argument("-fb", "--forward-backwards", nargs = '+',
+help="ForwardBackward file from RFMix. Needs to contain the substring 'chrxx' where xx is the chromosome number in the filename")
 
     args = parser.parse_args()
     viterbi_dict =  handle_input_files(args.viterbi) 
     bim_dict = handle_input_files(args.bim)
-    
+
+    FB_dict = handle_input_files(args.forward_backwards)
+    import pdb
+    pdb.set_trace()
+
     count_dict = OrderedDict()
+    FB_dict
     for chr_num in range(1,23): #22 chr
     #chr_num = 1  #22 chr
         print "Reading results for chr {}".format(chr_num)
         count_dict[chr_num] = read_viterbi(viterbi_dict[str(chr_num)])
-    
+    ## FB 
+    for chr_num in range(1,23): #22 chr
+        print "Reading FB file for chr {}".format(chr_num)
+        FB_dict[chr_num] = read_FB(FB_dict[str(chr_num)])
+
     bp_dict = OrderedDict()
     for chr_num in range(1,23): #22 chr
     #chr_num = 1  #22 chr
-        print "Reading results for chr {}".format(chr_num)
+        print "Reading bim file for chr {}".format(chr_num)
         bp_dict[chr_num] = read_genetic_bim(bim_dict[str(chr_num)])
     
     count_dict  =  filter_away_telemomers(count_dict, bp_dict) 
     
-    plotting(count_dict, bp_dict) 
+    plotting(count_dict, bp_dict,FB_dict) 
     print "Goodbye"
