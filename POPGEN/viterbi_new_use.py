@@ -137,26 +137,32 @@ def plotting(count_dict, bp_dict, FB_dict, backup_dict, print_FB):
     ## Find interesting viterbi rows
     ## return the corresponding rows in FB, should be fine to print for now.
     ## Threshold? if proporion CEU is < 95%??
+    
+    ### FIltering for backup FB
+    # SNP numer / row numer sohuld now be the same right? so can use count dict to filter out the SNPS?
+    
+    
     if print_FB:
         # Every fourth column in the dataframe
-        EUR_dict={}
+        output_dict={}
         #for i in range(1,3):
         for i in range(1,23):
             fourth=FB_dict[i].columns[::4]
+            khoisan = FB_dict[i].columns[3::4] 
             print"Looking through SNP on chr{}".format(i)
-            EUR_dict[i]={}
-            for SNP in  backup_dict[i].keys():
+            output_dict[i]={}
+            for SNP in  count_dict[i].keys():
                 # Not 100% EUR
-                if backup_dict[i][SNP][0] < 0.95:
-                    
+                if count_dict[i][SNP][0] < 1:
                     ## SNP name == every fourth probability
-                    EUR_dict[i][SNP]= FB_dict[i].loc[[SNP],fourth].to_string(index=False, header=False)
+                    output_dict[i][SNP]= FB_dict[i].loc[[SNP],khoisan].to_string(index=False, header=False)
 
-        with open("viterbi_FB.txt", 'w') as f:
+        with open("ROH_SNPS.txt", 'w') as f:
             print"printing SNP with less than 95% primary ancestry to file"
             for i in range(1,23):
-                for SNP in EUR_dict[i].keys():
-                    f.write("{} {} {}\n".format(i,SNP,EUR_dict[i][SNP]))
+                for SNP in output_dict[i].keys():
+                    # CHR BP data
+                    f.write("{} {} {}\n".format(i,bp_dict[i][SNP])) #output_dict[i][SNP]))
 
                 #backup_dict[i][]
                 #FB_dict[i]
