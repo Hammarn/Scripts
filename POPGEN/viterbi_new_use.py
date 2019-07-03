@@ -154,16 +154,21 @@ def plotting(count_dict, bp_dict, FB_dict, backup_dict, print_FB):
             fourth=FB_dict[i].columns[::4]
             khoisan = FB_dict[i].columns[3::4] 
             print"Looking through SNP on chr{}".format(i)
-            output_dict[i]={}
-            
             ## return a list of indicies(i.e SNS) for each CHR
 
             indicies  = count_DFs[i].loc[count_DFs[i][0]< 1].index.tolist()
-            short_rows = FB_dict[i].iloc[indicies]
+            ##BP to DF
+            bp_dict[i] = pd.DataFrame.from_dict(bp_dict[i],'index')
+            bp_dict[i]=bp_dict[i].rename(index=str, columns={0: "BP"})
+            #Both need to be 0-indexed
+            bp_dict[i]= bp_dict[i].reset_index(drop=True)
+            ##add BP pos 
+            FB_dict[i]=pd.concat([bp_dict[i],FB_dict[i]],  axis=1, join='inner') 
+            
             ## add chr num to FB
-            FB_dict[i]['CHR']=i
-            pdb.set_trace()
-            FB_dict[i].to_csv("ROH_SNPS_chr{}.txt".format(i))
+            #FB_dict[i]['CHR']=i
+            short_rows = FB_dict[i].iloc[indicies]
+            short_rows.to_csv("ROH_SNPS_chr{}.txt".format(i), index= False)
 
 
     ## need to add in 
