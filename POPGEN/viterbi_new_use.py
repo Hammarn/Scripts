@@ -73,7 +73,7 @@ def filter_away_telemomers(count_dict, bp_dict):
     """
     #2 Mbp
     filter_value = 2000000
-    for vit_num in range(1,23):
+    for vit_num in [2,21]:
         items  = count_dict[vit_num]
         items_to_keep = []    
         
@@ -141,38 +141,38 @@ def plotting(count_dict, bp_dict, FB_dict, backup_dict, print_FB):
     ### FIltering for backup FB
     # SNP numer / row numer sohuld now be the same right? so can use count dict to filter out the SNPS?
     
-    
+    count_DFs={}
+    for i in [2,21]:
+        count_DFs[i]=pd.DataFrame.from_dict(count_dict[i],'index')
+
     if print_FB:
+        #count_dict to dataframe=
         # Every fourth column in the dataframe
         output_dict={}
         #for i in range(1,3):
-        for i in range(1,23):
+        for i in [2,21]:
             fourth=FB_dict[i].columns[::4]
             khoisan = FB_dict[i].columns[3::4] 
             print"Looking through SNP on chr{}".format(i)
             output_dict[i]={}
-            for SNP in  count_dict[i].keys():
-                # Not 100% EUR
-                if count_dict[i][SNP][0] < 1:
-                    ## SNP name == every fourth probability
-                    output_dict[i][SNP]= FB_dict[i].loc[[SNP],khoisan].to_string(index=False, header=False)
+            
+            ## return a list of indicies(i.e SNS) for each CHR
 
-        with open("ROH_SNPS.txt", 'w') as f:
-            print"printing SNP with less than 95% primary ancestry to file"
-            for i in range(1,23):
-                for SNP in output_dict[i].keys():
-                    # CHR BP data
-                    f.write("{} {} {}\n".format(i,bp_dict[i][SNP])) #output_dict[i][SNP]))
+            indicies  = count_DFs[i].loc[count_DFs[i][0]< 1].index.tolist()
+            short_rows = FB_dict[i].iloc[indicies]
+            ## add chr num to FB
+            FB_dict[i]['CHR']=i
+            pdb.set_trace()
+            FB_dict[i].to_csv("ROH_SNPS_chr{}.txt".format(i))
 
-                #backup_dict[i][]
-                #FB_dict[i]
+
     ## need to add in 
 
 ### Actual plotting here
     print "Not plotting"
     sys.exit() 
     ## Make sure we are accessing the chromosomes in the correct order
-    for key in range(1,23):
+    for key in [2,21]:
         print "Building subplot {}".format(key)
         TOOLTIPS=[
             #( "index", "$index"      ),
@@ -223,17 +223,17 @@ if __name__ == "__main__":
     FB_dict = handle_input_files(args.forward_backwards)
 
     count_dict = OrderedDict()
-    for chr_num in range(1,23): #22 chr
+    for chr_num in [2,21]: #22 chr
     #chr_num = 1  #22 chr
         print "Reading results for chr {}".format(chr_num)
         count_dict[chr_num] = read_viterbi(viterbi_dict[str(chr_num)])
     ## FB 
-    for chr_num in range(1,23): #22 chr
+    for chr_num in [2,21]: #22 chr
         print "Reading FB file for chr {}".format(chr_num)
         FB_dict[chr_num] = read_FB(FB_dict[str(chr_num)])
 
     bp_dict = OrderedDict()
-    for chr_num in range(1,23): #22 chr
+    for chr_num in [2,21]: #22 chr
     #chr_num = 1  #22 chr
         print "Reading bim file for chr {}".format(chr_num)
         bp_dict[chr_num] = read_genetic_bim(bim_dict[str(chr_num)])
