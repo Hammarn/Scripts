@@ -12,6 +12,7 @@ from bokeh.core.properties import value
 from bokeh.palettes import all_palettes
 from bokeh.models import Legend, HoverTool, LegendItem
 from bokeh.transform import linear_cmap
+from bokeh.palettes import inferno
 
 import pdb
 
@@ -31,10 +32,33 @@ def plotting(umaped_data, raw_data):
     source = pd.concat([raw_data[['FID','IID']], umaped_df], axis=1)
     source.set_index('FID')
     source  = source.rename(columns={0: "x", 1: "y"})
-    pdb.set_trace()
+    #pdb.set_trace()
     p = figure()
-    p.circle(x='x', y='y', source=source, size=10, color='green')
+    
+    fids = source.FID.unique()
+    colours = inferno(len(fids))
+    leg_1 = []
+    for counter,pop in enumerate(fids):
+            
+        leg_1.append(( pop, [p.circle(x='x', y='y', source=source.loc[source['FID'] == pop], size=10, color=colours[counter])] ))
+    
+    legend1 = Legend(items=leg_1)#, location = (20, 20))
+    p.add_layout(legend1, 'left') 
+
+
     output_file('UMAP.html')
+    #data.loc[data['Region'] == region]
+   
+
+
+    p.add_tools(HoverTool(
+     tooltips = [
+         ('Population', '@FID'),
+             ]
+         ))
+    
+    
+    
     show(p)
     return
 
