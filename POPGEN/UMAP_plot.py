@@ -42,6 +42,7 @@ def plotting(umaped_data, raw_data, output, key_file):
     fids = source.FID.unique()
     colours = inferno(len(fids))
     leg_1 = []
+    
     if key:
         key_info = {}
         try:
@@ -61,11 +62,15 @@ def plotting(umaped_data, raw_data, output, key_file):
         ki_re = ki_re.rename(columns={'index':'FID', 0:'Region'})
         source = pd.merge(source, ki_re, on = ['FID'])
 
-
+        
         for counter,region in enumerate(regions):
             ## Legend takes "Text to print", figure object
             ##todo make a list/DF with pops for each region so that can be used below:
-            leg_1.append(( region, [p.circle(x='x', y='y', source=source.loc[source['Region'] == region ], size=6, color=colours[counter], muted_alpha=0.2 ) ] ))
+            leg_1.append(( region, [p.circle(x='x', y='y', source=source.loc[source['Region'] == region ], size=9, color=colours[counter], muted_alpha=0.2 ) ] ))
+        legend1 = Legend(items=leg_1, location = (0, 400))
+        p.add_layout(legend1, 'left')
+        p.legend.label_text_font_size = '18pt'
+    
     
     else:
         for counter,pop in enumerate(fids):
@@ -73,11 +78,8 @@ def plotting(umaped_data, raw_data, output, key_file):
             ## This is here being parsed through a list. Makes it easy to add additional legends later if I want to
             leg_1.append(( pop, [p.circle(x='x', y='y', source=source.loc[source['FID'] == pop], size=6, color=colours[counter], muted_alpha=0.2 ) ] ))
     
-    legend1 = Legend(items=leg_1)#, location = (20, 20))
-    p.add_layout(legend1, 'left') 
-
-    #data.loc[data['Region'] == region]
-   
+        legend1 = Legend(items=leg_1)#, location = (20, 20))
+        p.add_layout(legend1, 'left') 
 
     p.legend.click_policy="mute"
     p.add_tools(HoverTool(
