@@ -5,6 +5,7 @@ import httplib2
 import argparse
 import pickle
 import os.path
+from apiclient import discovery
 from googleapiclient.discovery import build
 from google_auth_oauthlib.flow import InstalledAppFlow
 from google.auth.transport.requests import Request
@@ -59,7 +60,7 @@ def get_location(cityname):
         return (lat,lng)
 
 def main(ID,subsheet, loc_column, start, stop ):
-
+    ID = ID[0]
     credentials = get_credentials()
     http = credentials.authorize(httplib2.Http())
     discoveryUrl = ('https://sheets.googleapis.com/$discovery/rest?'
@@ -67,9 +68,12 @@ def main(ID,subsheet, loc_column, start, stop ):
     service = discovery.build('sheets', 'v4', http=http,
                               discoveryServiceUrl=discoveryUrl)
 
-    RANGE = '{shn}!{pc}{sr}:{pc}{er}'.format(shn=subsheet, sr=start, pc=loc_column, er=stop)
+    RANGE = '{shn}!{pc}{sr}:{pc}{er}'.format(shn=subsheet, sr=int(start[0]), pc=loc_column[0], er=int(stop[0]))
     
-    result = service.spreadsheets().values().get(spreadsheetId=ID, range=RANGE).execute()
+    
+    result = service.spreadsheets().values().get(spreadsheetId = ID, range=RANGE).execute()
+    import pdb
+    pdb.set_trace()
     values = result.get('values', [])
     locations=[row[0] for row in values]
     import pdb
@@ -79,7 +83,7 @@ def main(ID,subsheet, loc_column, start, stop ):
 
 
 if __name__ == '__main__':
-    parser = argparse.ArgumentParser("Read name of a location in a googlr sheets and return lat. long.")
+    parser = argparse.ArgumentParser("Read name of a location in a google sheets and return lat. long.")
     parser.add_argument("-l", "--location_column", nargs = 1,
         help="Column in the spreadsheet with the location to be read")
     parser.add_argument("-r", "--row", nargs = 1, default = 1,
@@ -88,7 +92,7 @@ if __name__ == '__main__':
         help="which row to stop at")
     parser.add_argument("-o", "--output_column", nargs = 2,
         help="Colums to right to, lattitude followed by longitude")
-    parser.add_argument("-id", "--id", nargs = '+',
+    parser.add_argument("-id", "--id", nargs = '+', required=True,
         help= "Worksheet ID something like '10mfjefQ3kXRvubtM6yrYRHBGFqw2dg-EPT2DsMpadyGU'")
     parser.add_argument("-sub", "--subsheet_name", default='Sheet1',
         help="Which sheet in the document should be modified")
