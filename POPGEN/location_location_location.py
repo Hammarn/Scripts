@@ -12,8 +12,7 @@ from google.auth.transport.requests import Request
 from oauth2client.file import Storage
 from oauth2client import client
 from oauth2client import tools
-import geopy
-
+from geopy.geocoders import Nominatim
 
 # If modifying these scopes, delete the file token.pickle.
 SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly']
@@ -72,13 +71,17 @@ def main(ID,subsheet, loc_column, start, stop ):
     
     
     result = service.spreadsheets().values().get(spreadsheetId = ID, range=RANGE).execute()
-    import pdb
-    pdb.set_trace()
     values = result.get('values', [])
-    locations=[row[0] for row in values]
-    import pdb
-    pdb.set_trace()
     #result = service.spreadsheets().values().update(spreadsheetId=SAMPLESHEET_ID, range=RESULTS_RANGE.format(cell=my_cell), valueInputOption="USER_ENTERED", body=tv).execute()
+    for location in values:
+        import pdb
+        pdb.set_trace()
+        get_location(location)
+## TODO
+## dict for saving output?
+## skip empty rows
+## write to sheet
+## write in a colour that makes it clear it was written by the script
 
 
 
