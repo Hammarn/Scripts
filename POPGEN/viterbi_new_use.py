@@ -18,14 +18,21 @@ from bokeh.plotting import figure, save
 from bokeh.palettes import Spectral5
 
 
+import pdb
+
 def handle_input_files(files):
     # Figure out which chr we are working with and return them in order
     chr_pat = re.compile('chr\d+')
+    uppercase = re.compile('CHR\d+')
     chr_nm_pat = re.compile('\d+')
     file_dict = {}
     for f in files:
         full_name =  os.path.abspath(f)
-        chr_plus_nm = chr_pat.search(f).group(0)
+        try:
+            chr_plus_nm = chr_pat.search(f).group(0)
+        except AttributeError,TypeError:
+            chr_plus_nm = uppercase.search(f).group(0)
+
         chr_nm = chr_nm_pat.search(chr_plus_nm).group(0)
         file_dict[chr_nm] = full_name
     return file_dict
@@ -42,12 +49,18 @@ def read_viterbi(viterbi_file):
             two = line.count('2')
             three = line.count('3')
             four = line.count('4')
-            #five = line.count('5')
-            #six = line.count('6')
+            five = line.count('5')
+            six = line.count('6')
+            seven = line.count('7')
             counter +=1
-            sum_nu = sum((one,two,three,four))
-            chr_dict[counter]=[one/float(sum_nu),two/float(sum_nu),three/float(sum_nu),four/float(sum_nu)]
-    
+            sum_nu = sum((one,two,three,four, five, six, seven))
+            try:
+                chr_dict[counter]=[one/float(sum_nu),two/float(sum_nu),three/float(sum_nu),four/float(sum_nu),five/float(sum_nu),six/float(sum_nu),seven/float(sum_nu) ]
+            except:
+                print("OOps")
+                pdb.set_trace()
+
+                x= 0     
     return chr_dict
 
 def read_FB(Fb_file):
@@ -73,7 +86,7 @@ def filter_away_telemomers(count_dict, bp_dict):
     """
     #2 Mbp
     filter_value = 2000000
-    for vit_num in [2,21]:
+    for vit_num in range(1,23):
         items  = count_dict[vit_num]
         items_to_keep = []    
         
@@ -97,20 +110,23 @@ def filter_away_telemomers(count_dict, bp_dict):
     return count_dict
 
 
-def plotting(count_dict, bp_dict, FB_dict, backup_dict, print_FB):
+def plotting(count_dict, bp_dict, FB_dict, backup_dict, print_FB, names):
     count_dict = count_dict
     bp_dict = bp_dict
     # Each key is a CHR
-    names = ['CEU', 'CDX', 'YRI', 'Khoisan']
+    #get names from user instead
+    #names = ['CEU', 'CDX', 'YRI', 'Khoisan']
     data_dict =  {}
     counter = 0 
     for key in count_dict.keys():
             data_dict[key] = []
-            CEU = []
-            CDX = []
-            YRI = []
-            Khoisan = []
-            Pos = [] 
+            A_1 = []
+            A_2 = []
+            A_3 = []
+            A_4 = []
+            A_5 = [] 
+            A_6 = [] 
+            A_7 = [] 
             # Each i is a line in Viterbi-file i.e. a SNP
 
             for i in count_dict[key].keys():
@@ -121,10 +137,13 @@ def plotting(count_dict, bp_dict, FB_dict, backup_dict, print_FB):
                 Pos.append(bp_dict[key][i])
                 bp_dict[key]
 
-            data_dict[key] = {'CEU' : pd.Series(CEU, index = Pos),
-                'CDX' : pd.Series(CDX, index = Pos),
-                'YRI' : pd.Series(YRI, index = Pos),
-                'Khoisan' : pd.Series(Khoisan, index = Pos),
+            data_dict[key] = {'{}'.format(names[0]) : pd.Series(A_1, index = Pos),
+                '{}'.format(names[1]) : pd.Series(A_2, index = Pos),
+                '{}'.format(names[3]) : pd.Series(A_3, index = Pos),
+                '{}'.format(names[4]) : pd.Series(A_4, index = Pos),
+                '{}'.format(names[5]) : pd.Series(A_5, index = Pos),
+                '{}'.format(names[6]) : pd.Series(A_6, index = Pos),
+                '{}'.format(names[6]) : pd.Series(A_7, index = Pos),
                  }#'Chromosome' : key }
             data_dict[key] = pd.DataFrame(data_dict[key])    
     data =  pd.concat([data_dict[key] for key in  data_dict.keys()])
@@ -142,7 +161,7 @@ def plotting(count_dict, bp_dict, FB_dict, backup_dict, print_FB):
     # SNP numer / row numer sohuld now be the same right? so can use count dict to filter out the SNPS?
     
     count_DFs={}
-    for i in [2,21]:
+    for i in range(1,23):
         count_DFs[i]=pd.DataFrame.from_dict(count_dict[i],'index')
 
     if print_FB:
@@ -150,7 +169,7 @@ def plotting(count_dict, bp_dict, FB_dict, backup_dict, print_FB):
         # Every fourth column in the dataframe
         output_dict={}
         #for i in range(1,3):
-        for i in [2,21]:
+        for i in range(1,23):
             fourth=FB_dict[i].columns[::4]
             khoisan = FB_dict[i].columns[3::4] 
             print"Looking through SNP on chr{}".format(i)
@@ -174,10 +193,10 @@ def plotting(count_dict, bp_dict, FB_dict, backup_dict, print_FB):
     ## need to add in 
 
 ### Actual plotting here
-    print "Not plotting"
-    sys.exit() 
+   # print "Not plotting"
+   # sys.exit() 
     ## Make sure we are accessing the chromosomes in the correct order
-    for key in [2,21]:
+    for key in range(1,23):
         print "Building subplot {}".format(key)
         TOOLTIPS=[
             #( "index", "$index"      ),
@@ -211,7 +230,7 @@ def plotting(count_dict, bp_dict, FB_dict, backup_dict, print_FB):
 
 if __name__ == "__main__":
     # Command line arguments
-    parser = argparse.ArgumentParser("Make a scatter plot of FPKM counts between conditions")
+    parser = argparse.ArgumentParser("Plot output from RFMIX")
     parser.add_argument("-v", "--viterbi", nargs = '+',
         help="Viterbi output files from RFMix. Needs to contain the substring 'chrxx' where xx is the chromosome number in the filename")
     parser.add_argument("-b", "--bim", nargs = '+',
@@ -220,30 +239,32 @@ if __name__ == "__main__":
         help="ForwardBackward file from RFMix. Needs to contain the substring 'chrxx' where xx is the chromosome number in the filename")
     parser.add_argument("-PFB", "--print_FB", default=True,
     help="If FB positions should be revealed")
+    parser.add_argument("-n", "--names", nargs = '+',
+        help="Names of the populations in order separate by space. eg. YRI CEU HAN ")
 
     args = parser.parse_args()
     viterbi_dict =  handle_input_files(args.viterbi) 
     bim_dict = handle_input_files(args.bim)
-
-    FB_dict = handle_input_files(args.forward_backwards)
+    if args.forward_backwards:
+        FB_dict = handle_input_files(args.forward_backwards)
 
     count_dict = OrderedDict()
-    for chr_num in [2,21]: #22 chr
+    for chr_num in range(1,23): #22 chr
     #chr_num = 1  #22 chr
         print "Reading results for chr {}".format(chr_num)
         count_dict[chr_num] = read_viterbi(viterbi_dict[str(chr_num)])
     ## FB 
-    for chr_num in [2,21]: #22 chr
+    for chr_num in range(1,23): #22 chr
         print "Reading FB file for chr {}".format(chr_num)
         FB_dict[chr_num] = read_FB(FB_dict[str(chr_num)])
 
     bp_dict = OrderedDict()
-    for chr_num in [2,21]: #22 chr
+    for chr_num in range(1,23): #22 chr
     #chr_num = 1  #22 chr
         print "Reading bim file for chr {}".format(chr_num)
         bp_dict[chr_num] = read_genetic_bim(bim_dict[str(chr_num)])
     backup_dict = copy.deepcopy(count_dict) 
     count_dict  =  filter_away_telemomers(count_dict, bp_dict) 
     
-    plotting(count_dict, bp_dict,FB_dict, backup_dict,args.print_FB) 
+    plotting(count_dict, bp_dict,FB_dict, backup_dict,args.print_FB,args.names ) 
     print "Goodbye"
