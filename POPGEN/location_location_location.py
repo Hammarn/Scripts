@@ -71,7 +71,6 @@ def main(ID,subsheet, loc_column, start, stop, output_col ):
                               discoveryServiceUrl=discoveryUrl)
 
     RANGE = '{shn}!{pc}{sr}:{pc}{er}'.format(shn=subsheet, sr=int(start[0]), pc=loc_column[0], er=int(stop[0]))
-    
     X_RANGE = '{shn}!{rc}'.format(shn=subsheet, rc=output_col[0]) + "{cell}"
     Y_RANGE = '{shn}!{rc}'.format(shn=subsheet, rc=output_col[1]) + "{cell}"
 
@@ -94,22 +93,21 @@ def main(ID,subsheet, loc_column, start, stop, output_col ):
     for counter, location in enumerate(values):
         location_dict[rows[counter]] = single_lookup[location] 
 
-    pdb.set_trace()
 
     ### Write results
 
     for key in location_dict.keys():
-        x = {
-                "values":location_dict[key][0],
+        x = {   
+                "values":[["{}".format(location_dict[key][0])]],
                 }
         y = {
-                "values":location_dict[key][1],
+                "values":[["{}".format(location_dict[key][1])]],
                 }
+        pdb.set_trace()
         latitude = service.spreadsheets().values().update(spreadsheetId=ID, range=X_RANGE.format(cell=key), valueInputOption="USER_ENTERED", body=x).execute()
         longitude = service.spreadsheets().values().update(spreadsheetId=ID, range=Y_RANGE.format(cell=key), valueInputOption="USER_ENTERED", body=y).execute()
         
 ## TODO
-## dict for saving output?
 ## skip empty rows
 ## write to sheet
 ## write in a colour that makes it clear it was written by the script
