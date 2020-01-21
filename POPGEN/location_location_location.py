@@ -14,15 +14,20 @@ from oauth2client import client
 from oauth2client import tools
 from geopy.geocoders import Nominatim
 
+
+
+import pdb
+
+
 # If modifying these scopes, delete the file token.pickle.
-SCOPES = ['https://www.googleapis.com/auth/spreadsheets.readonly']
+SCOPES = ['https://www.googleapis.com/auth/spreadsheets']
 
 # The ID and range of a sample spreadsheet.
 #SAMPLE_SPREADSHEET_ID = '1BxiMVs0XRA5nFMdKvBdBZjgmUUqptlbs74OgvE2upms'
 #SAMPLE_RANGE_NAME = 'Class Data!A2:E'
 
 CLIENT_SECRET_FILE = 'credentials.json'
-APPLICATION_NAME = 'Google Sheets API Python Quickstart'
+APPLICATION_NAME = 'Location location location'
 
 
 def get_credentials():
@@ -48,8 +53,6 @@ def get_credentials():
         print('Storing credentials to ' + credential_path)
     return credentials
 
-#def read_from_sheet(column, row):
-
 
 def get_location(cityname):
         geolocator = Nominatim(user_agent='my-application')
@@ -58,7 +61,7 @@ def get_location(cityname):
         lng = location.longitude
         return (lat,lng)
 
-def main(ID,subsheet, loc_column, start, stop ):
+def main(ID,subsheet, loc_column, start, stop, output_col ):
     ID = ID[0]
     credentials = get_credentials()
     http = credentials.authorize(httplib2.Http())
@@ -69,14 +72,42 @@ def main(ID,subsheet, loc_column, start, stop ):
 
     RANGE = '{shn}!{pc}{sr}:{pc}{er}'.format(shn=subsheet, sr=int(start[0]), pc=loc_column[0], er=int(stop[0]))
     
-    
+    X_RANGE = '{shn}!{rc}'.format(shn=subsheet, rc=output_col[0]) + "{cell}"
+    Y_RANGE = '{shn}!{rc}'.format(shn=subsheet, rc=output_col[1]) + "{cell}"
+
     result = service.spreadsheets().values().get(spreadsheetId = ID, range=RANGE).execute()
     values = result.get('values', [])
-    #result = service.spreadsheets().values().update(spreadsheetId=SAMPLESHEET_ID, range=RESULTS_RANGE.format(cell=my_cell), valueInputOption="USER_ENTERED", body=tv).execute()
-    for location in values:
-        import pdb
-        pdb.set_trace()
-        get_location(location)
+    #Get a flat list instead of a list of lists  
+    values = [item for sublist in values for item in sublist]
+    rows = []
+    ## get the stop as well
+    rows = range(int(start[0]), int(stop[0])+1) 
+    location_dict = {}
+    single_values = set(values)
+
+    ## attempt to avoid DDosing the lookup server by reducing it to one attempt per unique location
+    single_lookup = {}
+    for location in single_values:
+        single_lookup[location] =  get_location(location)
+
+    
+    for counter, location in enumerate(values):
+        location_dict[rows[counter]] = single_lookup[location] 
+
+    pdb.set_trace()
+
+    ### Write results
+
+    for key in location_dict.keys():
+        x = {
+                "values":location_dict[key][0],
+                }
+        y = {
+                "values":location_dict[key][1],
+                }
+        latitude = service.spreadsheets().values().update(spreadsheetId=ID, range=X_RANGE.format(cell=key), valueInputOption="USER_ENTERED", body=x).execute()
+        longitude = service.spreadsheets().values().update(spreadsheetId=ID, range=Y_RANGE.format(cell=key), valueInputOption="USER_ENTERED", body=y).execute()
+        
 ## TODO
 ## dict for saving output?
 ## skip empty rows
@@ -102,5 +133,4 @@ if __name__ == '__main__':
 
     args = parser.parse_args()
 
-
-    main(args.id ,args.subsheet_name ,args.location_column ,args.row ,args.stop_row )
+    main(args.id ,args.subsheet_name ,args.location_column ,args.row ,args.stop_row, args.output_column )
