@@ -54,7 +54,6 @@ def get_credentials():
     return credentials
 
 
-def get_location(cityname):
         geolocator = Nominatim(user_agent='my-application')
         location = geolocator.geocode(cityname)
         lat = location.latitude
@@ -77,7 +76,7 @@ def main(ID,subsheet, loc_column, start, stop, output_col ):
     result = service.spreadsheets().values().get(spreadsheetId = ID, range=RANGE).execute()
     values = result.get('values', [])
     #Get a flat list instead of a list of lists  
-    values = [item for sublist in values for item in sublist]
+    values = [item for sublist in values for item in (sublist or [''])] 
     rows = []
     ## get the stop as well
     rows = range(int(start[0]), int(stop[0])+1) 
@@ -87,8 +86,14 @@ def main(ID,subsheet, loc_column, start, stop, output_col ):
     ## attempt to avoid DDosing the lookup server by reducing it to one attempt per unique location
     single_lookup = {}
     for location in single_values:
-        single_lookup[location] =  get_location(location)
-
+        if location:
+            place_hold = get_location(location)
+            place_hold = list(place_hold)
+            place_hold[0] = str(place_hold[0]).replace(".",",")
+            place_hold[1] = str(place_hold[1]).replace(".",",")
+            single_lookup[location] = place_hold
+        else:
+            single_lookup[location] = ''
     
     for counter, location in enumerate(values):
         location_dict[rows[counter]] = single_lookup[location] 
@@ -97,15 +102,20 @@ def main(ID,subsheet, loc_column, start, stop, output_col ):
     ### Write results
 
     for key in location_dict.keys():
+        if not location_dict[key]:
+            continue
+            ## No location info, so nothing to write
+
         x = {   
                 "values":[["{}".format(location_dict[key][0])]],
                 }
         y = {
                 "values":[["{}".format(location_dict[key][1])]],
                 }
-        pdb.set_trace()
-        latitude = service.spreadsheets().values().update(spreadsheetId=ID, range=X_RANGE.format(cell=key), valueInputOption="USER_ENTERED", body=x).execute()
-        longitude = service.spreadsheets().values().update(spreadsheetId=ID, range=Y_RANGE.format(cell=key), valueInputOption="USER_ENTERED", body=y).execute()
+        ### Add check as to not overwrite
+
+        latitude = service.spreadsheets().values().update(spreadsheetId=ID, range=X_RANGE.format(cell=key), valueInputOption="RAW", body=x).execute()
+        longitude = service.spreadsheets().values().update(spreadsheetId=ID, range=Y_RANGE.format(cell=key), valueInputOption="RAW", body=y).execute()
         
 ## TODO
 ## skip empty rows
