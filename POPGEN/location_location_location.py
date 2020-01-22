@@ -53,12 +53,12 @@ def get_credentials():
         print('Storing credentials to ' + credential_path)
     return credentials
 
-
-        geolocator = Nominatim(user_agent='my-application')
-        location = geolocator.geocode(cityname)
-        lat = location.latitude
-        lng = location.longitude
-        return (lat,lng)
+def get_location(cityname):
+    geolocator = Nominatim(user_agent='my-application')
+    location = geolocator.geocode(cityname)
+    lat = location.latitude
+    lng = location.longitude
+    return (lat,lng)
 
 def main(ID,subsheet, loc_column, start, stop, output_col ):
     ID = ID[0]
