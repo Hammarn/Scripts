@@ -113,13 +113,21 @@ def main(ID,subsheet, loc_column, start, stop, output_col ):
                 "values":[["{}".format(location_dict[key][1])]],
                 }
         ### Add check as to not overwrite
+        
+        output_value = service.spreadsheets().values().get(spreadsheetId = ID, range=X_RANGE.format(cell=key)).execute()
+       ## A bit wierd and backwards but works. Check to see if the row we are trying to write to is empty or not 
+        try:
+            output_value['values']
+            empty = False
+        except KeyError:
+            empty = True
 
-        latitude = service.spreadsheets().values().update(spreadsheetId=ID, range=X_RANGE.format(cell=key), valueInputOption="RAW", body=x).execute()
-        longitude = service.spreadsheets().values().update(spreadsheetId=ID, range=Y_RANGE.format(cell=key), valueInputOption="RAW", body=y).execute()
+        if empty:
+
+            latitude = service.spreadsheets().values().update(spreadsheetId=ID, range=X_RANGE.format(cell=key), valueInputOption="USER_ENTERED", body=x).execute()
+            longitude = service.spreadsheets().values().update(spreadsheetId=ID, range=Y_RANGE.format(cell=key), valueInputOption="USER_ENTERED", body=y).execute()
         
 ## TODO
-## skip empty rows
-## write to sheet
 ## write in a colour that makes it clear it was written by the script
 
 
