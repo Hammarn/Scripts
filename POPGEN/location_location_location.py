@@ -55,9 +55,13 @@ def get_credentials():
 
 def get_location(cityname):
     geolocator = Nominatim(user_agent='my-application')
-    location = geolocator.geocode(cityname)
-    lat = location.latitude
-    lng = location.longitude
+    try:
+        location = geolocator.geocode(cityname)
+        lat = location.latitude
+        lng = location.longitude
+    except:
+        return False
+    
     return (lat,lng)
 
 def main(ID,subsheet, loc_column, start, stop, output_col ):
@@ -88,6 +92,8 @@ def main(ID,subsheet, loc_column, start, stop, output_col ):
     for location in single_values:
         if location:
             place_hold = get_location(location)
+            if not place_hold:
+                continue 
             place_hold = list(place_hold)
             place_hold[0] = str(place_hold[0]).replace(".",",")
             place_hold[1] = str(place_hold[1]).replace(".",",")
@@ -96,8 +102,11 @@ def main(ID,subsheet, loc_column, start, stop, output_col ):
             single_lookup[location] = ''
     
     for counter, location in enumerate(values):
-        location_dict[rows[counter]] = single_lookup[location] 
-
+        if location in single_lookup:
+            location_dict[rows[counter]] = single_lookup[location] 
+        else:
+            ## only if we found an entry
+            continue
 
     ### Write results
 
