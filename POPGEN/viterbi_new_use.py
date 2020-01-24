@@ -127,22 +127,26 @@ def plotting(count_dict, bp_dict, FB_dict, backup_dict, print_FB, names):
             A_5 = [] 
             A_6 = [] 
             A_7 = [] 
+            Pos = [] 
             # Each i is a line in Viterbi-file i.e. a SNP
-
             for i in count_dict[key].keys():
-                CEU.append(count_dict[key][i][0])
-                CDX.append(count_dict[key][i][1])
-                YRI.append(count_dict[key][i][2])
-                Khoisan.append(count_dict[key][i][3])
+                A_1.append(count_dict[key][i][0])
+                A_2.append(count_dict[key][i][1])
+                A_3.append(count_dict[key][i][2])
+                A_4.append(count_dict[key][i][3])
+                A_5.append(count_dict[key][i][4])
+                A_6.append(count_dict[key][i][5])
+                A_7.append(count_dict[key][i][6])
                 Pos.append(bp_dict[key][i])
+                
                 bp_dict[key]
 
             data_dict[key] = {'{}'.format(names[0]) : pd.Series(A_1, index = Pos),
                 '{}'.format(names[1]) : pd.Series(A_2, index = Pos),
-                '{}'.format(names[3]) : pd.Series(A_3, index = Pos),
-                '{}'.format(names[4]) : pd.Series(A_4, index = Pos),
-                '{}'.format(names[5]) : pd.Series(A_5, index = Pos),
-                '{}'.format(names[6]) : pd.Series(A_6, index = Pos),
+                '{}'.format(names[2]) : pd.Series(A_3, index = Pos),
+                '{}'.format(names[3]) : pd.Series(A_4, index = Pos),
+                '{}'.format(names[4]) : pd.Series(A_5, index = Pos),
+                '{}'.format(names[5]) : pd.Series(A_6, index = Pos),
                 '{}'.format(names[6]) : pd.Series(A_7, index = Pos),
                  }#'Chromosome' : key }
             data_dict[key] = pd.DataFrame(data_dict[key])    
@@ -163,8 +167,7 @@ def plotting(count_dict, bp_dict, FB_dict, backup_dict, print_FB, names):
     count_DFs={}
     for i in range(1,23):
         count_DFs[i]=pd.DataFrame.from_dict(count_dict[i],'index')
-
-    if print_FB:
+    if FB_dict:
         #count_dict to dataframe=
         # Every fourth column in the dataframe
         output_dict={}
@@ -204,11 +207,16 @@ def plotting(count_dict, bp_dict, FB_dict, backup_dict, print_FB, names):
             ( 'Y',   '$y'            ),
         ]
         local_vars = vars()
+        ### Name of pop from variable instead of hardcoded!!
+        
         local_vars['p{}'.format(key)] = figure(plot_height=500, plot_width=500, output_backend="webgl", title="Chromosome {}".format(key))
-        local_vars['p{}'.format(key)].circle(x = data_dict[key].index.values, y = data_dict[key]['CEU'], color = "grey"   )
-        local_vars['p{}'.format(key)].circle(x = data_dict[key].index.values, y = data_dict[key]['CDX'], color = "skyblue"  )
-        local_vars['p{}'.format(key)].circle(x = data_dict[key].index.values, y = data_dict[key]['YRI'], color = "goldenrod"  )
-        local_vars['p{}'.format(key)].circle(x = data_dict[key].index.values, y = data_dict[key]['Khoisan'], color = "salmon"  )
+        local_vars['p{}'.format(key)].circle(x = data_dict[key].index.values, y = data_dict[key][names[0]], color = "grey"   )
+        local_vars['p{}'.format(key)].circle(x = data_dict[key].index.values, y = data_dict[key][names[1]], color = "skyblue"  )
+        local_vars['p{}'.format(key)].circle(x = data_dict[key].index.values, y = data_dict[key][names[2]], color = "goldenrod"  )
+        local_vars['p{}'.format(key)].circle(x = data_dict[key].index.values, y = data_dict[key][names[3]], color = "salmon"  )
+        local_vars['p{}'.format(key)].circle(x = data_dict[key].index.values, y = data_dict[key][names[4]], color = "deeppink"  )
+        local_vars['p{}'.format(key)].circle(x = data_dict[key].index.values, y = data_dict[key][names[5]], color = "darkviolet"  )
+        local_vars['p{}'.format(key)].circle(x = data_dict[key].index.values, y = data_dict[key][names[6]], color = "red"  )
         local_vars['p{}'.format(key)].xaxis.major_label_orientation = "vertical"
         local_vars['p{}'.format(key)].xaxis[0].formatter.use_scientific = False
         local_vars['p{}'.format(key)].xaxis[0].ticker = [int(data_dict[key].first_valid_index()) ,int(data_dict[key].last_valid_index())]
@@ -254,9 +262,10 @@ if __name__ == "__main__":
         print "Reading results for chr {}".format(chr_num)
         count_dict[chr_num] = read_viterbi(viterbi_dict[str(chr_num)])
     ## FB 
-    for chr_num in range(1,23): #22 chr
-        print "Reading FB file for chr {}".format(chr_num)
-        FB_dict[chr_num] = read_FB(FB_dict[str(chr_num)])
+    if args.forward_backwards:
+        for chr_num in range(1,23): #22 chr
+            print "Reading FB file for chr {}".format(chr_num)
+            FB_dict[chr_num] = read_FB(FB_dict[str(chr_num)])
 
     bp_dict = OrderedDict()
     for chr_num in range(1,23): #22 chr
@@ -266,5 +275,7 @@ if __name__ == "__main__":
     backup_dict = copy.deepcopy(count_dict) 
     count_dict  =  filter_away_telemomers(count_dict, bp_dict) 
     
+    if not args.forward_backwards:
+            FB_dict = 0
     plotting(count_dict, bp_dict,FB_dict, backup_dict,args.print_FB,args.names ) 
     print "Goodbye"
