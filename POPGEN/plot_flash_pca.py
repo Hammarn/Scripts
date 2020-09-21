@@ -30,6 +30,7 @@ def plotting(data, output_name, key, legend):
     #make_figure(PCA_1_2, output_name[0], pops, color,data, key_info)
     #make_figure(PCA_1_3, output_name[1], pops, color,data, key_info) 
     figures.append(make_figure(['PC1','PC2'], output_name[1], pops, color,data, key_info, legend ))
+    figures.append(make_figure(['PC1','PC3'], output_name[1], pops, color,data, key_info, legend ))
     figures.append(make_figure(['PC2','PC3'], output_name[1], pops, color,data, key_info, legend ))
     figures.append(make_figure(['PC2','PC4'], output_name[1], pops, color,data, key_info, legend ))
     figures.append(make_figure(['PC3','PC4'], output_name[1], pops, color,data, key_info, legend ))
@@ -39,6 +40,8 @@ def plotting(data, output_name, key, legend):
     p = column(figures)
    
     show(p)
+
+
 def make_figure(PCS,output_name, pops, color, data, key_info, nu_legends) :
     nu_legends = nu_legends
     fig = figure(title="PCA", toolbar_location="above", x_axis_label=PCS[0],y_axis_label=PCS[1],plot_width = 1500, plot_height = 1000 ) 
@@ -74,6 +77,8 @@ def make_figure(PCS,output_name, pops, color, data, key_info, nu_legends) :
             return 'circle_x'
         elif value == 'South East Asia':
             return 'square_x'
+        elif value == 'South Asia': 
+            return 'diamond_cross'
         elif value == 'Southern Africa':
             return 'inverted_triangle'
         elif value == 'Western Africa':
@@ -93,13 +98,21 @@ def make_figure(PCS,output_name, pops, color, data, key_info, nu_legends) :
     ki_re = ki.reset_index()
     ki_re = ki_re.rename(columns={'index':'FID', 0:'Region'})
     data = pd.merge(data, ki_re, on = ['FID'])
+    if nu_legends == '2':
+        nu_legends=2
+
     ### 2 legends
     if nu_legends == 2:
         for counter,pop in enumerate(ki.index.values):
             if counter < lenght_of_leg:
+                
                 leg_1.append( ( pop , [eval("fig.{}".format( ki['marker'][pop]))(x = PCS[0], y = PCS[1], color =color[colour_counter], size = 8, source = data.loc[data['FID'] == pop] ,  muted_alpha=0.2)])) 
             else:
-                leg_2.append( ( pop , [eval("fig.{}".format(ki['marker'][pop]))(x = PCS[0], y = PCS[1], color =color[colour_counter], size = 8, source = data.loc[data['FID'] == pop] ,  muted_alpha=0.2)])) 
+                try:
+                        leg_2.append( ( pop , [eval("fig.{}".format(ki['marker'][pop]))(x = PCS[0], y = PCS[1], color =color[colour_counter], size = 8, source = data.loc[data['FID'] == pop] ,  muted_alpha=0.2)])) 
+                except:
+                    pdb.set_trace()
+                    print pop
             colour_counter += 2
 
         legend1 = Legend(items=leg_1, location = (20, 20))
@@ -112,8 +125,12 @@ def make_figure(PCS,output_name, pops, color, data, key_info, nu_legends) :
     
     if nu_legends == 1:
         for counter,region in enumerate(set(ki[0].values)):
-            leg_1.append( ( region , [eval("fig.{}".format(data[['Region','marker']].drop_duplicates().loc[data['Region']==region].values[0].item(1) ))(x = PCS[0], y = PCS[1], color =color[colour_counter], size = 8, source = data.loc[data['Region'] == region] ,  muted_alpha=0.2)])) 
-            colour_counter += 30 
+            try:
+                leg_1.append( ( region , [eval("fig.{}".format(data[['Region','marker']].drop_duplicates().loc[data['Region']==region].values[0].item(1) ))(x = PCS[0], y = PCS[1], color =color[colour_counter], size = 8, source = data.loc[data['Region'] == region] ,  muted_alpha=0.2)])) 
+            except:
+                pdb.set_trace()
+                print pop
+            colour_counter += 20 
         legend1 = Legend(items=leg_1, location = (0, 400))
         fig.add_layout(legend1, 'left')
     
@@ -145,7 +162,9 @@ if __name__ == "__main__":
     parser.add_argument("-l","--legend", default = 1,
     help=  "Display 1 legend with Regions or 2 with Pops")
 
-args = parser.parse_args()
+    args = parser.parse_args()
 
-data = read_input(args.input)
-plotting(data, args.output, args.key, args.legend)
+    data = read_input(args.input)
+
+
+    plotting(data, args.output, args.key, args.legend)
