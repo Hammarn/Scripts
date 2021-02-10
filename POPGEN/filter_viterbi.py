@@ -5,6 +5,7 @@ import re
 import os
 from collections import OrderedDict
 
+import pdb 
 __author__ = "Rickard Hammarén @hammarn"
 
 def handle_input_files(files):
@@ -84,35 +85,80 @@ def filter_away_telemomers(count_dict, bp_dict):
              21 : (11288129,14288129),
              22 : (13000000,16000000)
              }
-    
-    #2 Mbp
+        ## They start at 0 and end at 10 000 for all chr in both hg19 and hg38
+        ## 
+        ##    Chromosome : Start (hg19),
+    telomers ={
+            1 : 249240621,
+            2 : 243189373,
+            3 : 198012430,
+            4 : 191144276,
+            5 : 180905260,
+            6 : 171105067,
+            7 : 159128663,
+            8 : 146354022,
+            9 : 141203431,
+            10 : 135524747,
+            11 : 134996516,
+            12 : 133841895,
+            13 : 115159878,
+            14 : 107339540,
+            15 : 102521392,
+            16 : 90344753,
+            17 : 81006629,
+            18 : 78067248,
+            19 : 59118983,
+            20 : 63015520,
+            21 : 48119895,
+            22 : 51294566,
+        }
+
+
+
+    #2 Mbp 249 240 621
     filter_value = 2000000
     # vit_num is the Chromosome in question
     for vit_num in range(1,23):
+
         items  = count_dict[vit_num]
         items_to_keep = []    
-        
         #first =  int(bp_dict[vit_num][1]) 
         #first = first + filter_value
         first = filter_value
-        last = int(bp_dict[vit_num].items()[-1][1]) 
+        #last = int(bp_dict[vit_num].items()[-1][1]) 
+        last = telomers[vit_num]
         last = last - filter_value
         left_cent =centromeres[vit_num][0] - filter_value
         right_cent =centromeres[vit_num][1] + filter_value
-        
         ##print "{}".format(len(count_dict[vit_num])) 
         ## pop instead of making a new library
     #    print "Filtering away telomeric regions for chr {} this could take a while".format(vit_num) 
-        for key in bp_dict[vit_num].keys():
-            #  pdb.set_trace()
-            ## Check if in telomere region
-            if int(bp_dict[vit_num][key]) < first or int(bp_dict[vit_num][key])  > last:
-                ## Check if in Centromere region
-                if int(bp_dict[vit_num][key]) > left_cent or int(bp_dict[vit_num][key]) < right_cent:
+        for SNP in bp_dict[vit_num].keys():
+            ## First check for the problematic start region on chr 15
+            if vit_num ==15:
+                if int(bp_dict[vit_num][SNP]) < 25858992 or int(bp_dict[vit_num][SNP])  > last:
+                        try:
+                            count_dict[vit_num].pop(SNP)
+                        except KeyError:
+                            continue
+                elif int(bp_dict[vit_num][SNP]) > left_cent and int(bp_dict[vit_num][SNP]) < right_cent:
                     try:
-                        count_dict[vit_num].pop(key)
+                        count_dict[vit_num].pop(SNP)
                     except KeyError:
                         continue
+
+            ## Check if in telomere region
+            if int(bp_dict[vit_num][SNP]) < first or int(bp_dict[vit_num][SNP])  > last:
+                try:
+                    count_dict[vit_num].pop(SNP)
+                except KeyError:
+                    continue
+            ## Check if in Centromere region
+            if int(bp_dict[vit_num][SNP]) > left_cent and int(bp_dict[vit_num][SNP]) < right_cent:
+                try:
+                    count_dict[vit_num].pop(SNP)
+                except KeyError:
+                    continue
     return count_dict
 
 
