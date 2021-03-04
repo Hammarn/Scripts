@@ -40,9 +40,10 @@ def plotting(umaped_data, raw_data, output, key_file):
     p = figure(title="UMAP of first 10 PCs", toolbar_location="above", x_axis_label="UMAP 1",y_axis_label="UMAP 2",plot_width = 1500, plot_height = 1000)
     
     fids = source.FID.unique()
+    lenght_of_leg = len(fids)/2
     colours = inferno(len(fids))
     leg_1 = []
-    
+    leg_2 = [] 
     if key:
         key_info = {}
         try:
@@ -76,10 +77,17 @@ def plotting(umaped_data, raw_data, output, key_file):
         for counter,pop in enumerate(fids):
             ## Legend takes "Text to print", figure object.
             ## This is here being parsed through a list. Makes it easy to add additional legends later if I want to
-            leg_1.append(( pop, [p.circle(x='x', y='y', source=source.loc[source['FID'] == pop], size=6, color=colours[counter], muted_alpha=0.2 ) ] ))
-    
-        legend1 = Legend(items=leg_1)#, location = (20, 20))
-        p.add_layout(legend1, 'left') 
+             if counter < lenght_of_leg:
+                leg_1.append(( pop, [p.circle(x='x', y='y', source=source.loc[source['FID'] == pop], size=6, color=colours[counter], muted_alpha=0.2 ) ] ))
+   
+             else:
+                leg_2.append(( pop, [p.circle(x='x', y='y', source=source.loc[source['FID'] == pop], size=6, color=colours[counter], muted_alpha=0.2 ) ] ))
+
+        legend1 = Legend(items=leg_1, location = (20, 20))
+        legend2 = Legend(items=leg_2, location = (25,20))
+        p.add_layout(legend1, 'left')
+        p.add_layout(legend2, 'left')
+        p.legend.label_text_font_size = '10pt' 
 
     p.legend.click_policy="mute"
     p.add_tools(HoverTool(

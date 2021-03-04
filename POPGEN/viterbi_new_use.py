@@ -11,7 +11,7 @@ import numpy as np
 from math import pi
 
 from collections import OrderedDict
-from bokeh.models import Axis,Range1d, HoverTool
+from bokeh.models import Axis,Range1d, HoverTool, Legend
 from bokeh.layouts import row, gridplot
 from bokeh.io import  show, output_file 
 from bokeh.plotting import figure, save
@@ -210,23 +210,24 @@ def plotting(count_dict, bp_dict, FB_dict, backup_dict, print_FB, names):
         ### Name of pop from variable instead of hardcoded!!
         
         local_vars['p{}'.format(key)] = figure(plot_height=500, plot_width=500, output_backend="webgl", title="Chromosome {}".format(key))
-        local_vars['p{}'.format(key)].circle(x = data_dict[key].index.values, y = data_dict[key][names[0]], color = "grey"   )
-        local_vars['p{}'.format(key)].circle(x = data_dict[key].index.values, y = data_dict[key][names[1]], color = "skyblue"  )
-        local_vars['p{}'.format(key)].circle(x = data_dict[key].index.values, y = data_dict[key][names[2]], color = "goldenrod"  )
-        local_vars['p{}'.format(key)].circle(x = data_dict[key].index.values, y = data_dict[key][names[3]], color = "salmon"  )
-        local_vars['p{}'.format(key)].circle(x = data_dict[key].index.values, y = data_dict[key][names[4]], color = "deeppink"  )
-        local_vars['p{}'.format(key)].circle(x = data_dict[key].index.values, y = data_dict[key][names[5]], color = "darkviolet"  )
-        local_vars['p{}'.format(key)].circle(x = data_dict[key].index.values, y = data_dict[key][names[6]], color = "red"  )
+        local_vars['p{}'.format(key)].circle(x = data_dict[key].index.values, y = data_dict[key][names[0]],  color = "grey"   )
+        local_vars['p{}'.format(key)].circle(x = data_dict[key].index.values, y = data_dict[key][names[1]],  color = "skyblue"  )
+        local_vars['p{}'.format(key)].circle(x = data_dict[key].index.values, y = data_dict[key][names[2]],  color = "goldenrod"  )
+        local_vars['p{}'.format(key)].circle(x = data_dict[key].index.values, y = data_dict[key][names[3]],  color = "salmon"  )
+        local_vars['p{}'.format(key)].circle(x = data_dict[key].index.values, y = data_dict[key][names[4]],  color = "deeppink"  )
+        local_vars['p{}'.format(key)].circle(x = data_dict[key].index.values, y = data_dict[key][names[5]],  color = "darkviolet"  )
+        local_vars['p{}'.format(key)].circle(x = data_dict[key].index.values, y = data_dict[key][names[6]],  color = "red"  )
         local_vars['p{}'.format(key)].xaxis.major_label_orientation = "vertical"
         local_vars['p{}'.format(key)].xaxis[0].formatter.use_scientific = False
         local_vars['p{}'.format(key)].xaxis[0].ticker = [int(data_dict[key].first_valid_index()) ,int(data_dict[key].last_valid_index())]
         local_vars['p{}'.format(key)].x_range = Range1d(int(data_dict[key].first_valid_index()) ,int(data_dict[key].last_valid_index()))
+        legend = Legend(items = [names[1], names[2], names[3], names[4], names[5], names[6], ])
 
         #output_file("Rf_chr{}.html".format(key))
         #export_svgs(local_vars['p{}'.format(key)], filename="Rfmix_intro_{}.svg".format(key))
         #save(local_vars['p{}'.format(key)])
             
-    
+    [local_vars['p{}'.format(i)] for i in data_dict.keys()].add_layout(legend, 'right')
     plot_list = [local_vars['p{}'.format(i)] for i in data_dict.keys()]
     #Make one figure out of the 22 subplots
     p =gridplot(plot_list, ncols=10) 

@@ -192,7 +192,6 @@ if __name__ == "__main__":
         print "Reading map file for chr {}".format(chr_num)
         bp_dict[chr_num], map_dict[chr_num]  = read_genetic_map(map_dict[str(chr_num)])
         
-    
     count_dict  =  filter_away_telemomers(count_dict, bp_dict) 
     
     for chr_num in range(1,23): #22 chr$():
