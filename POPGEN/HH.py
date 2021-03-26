@@ -6,9 +6,11 @@ import re
 import os
 import random
 import pandas as pd
+import numpy as np
 
 from datetime import datetime
 from collections import OrderedDict
+from collections import Counter
 
 import pdb
 __author__ = "Rickard Hammarén @hammarn"
@@ -26,9 +28,8 @@ def split_into_haplotypes(tped_D, K, N, tped_index_dict, chr_numb):
     ###   CHR SNP_NAME BLAJ SNP_POS 
     ###   0       1    2         3
     
-    num_individuals = N
+    #num_individuals = N
     ##there are two columns per individual!
-
 
     ## First four columns of tped is header data ^
     #num_indv = len(CHR[0].columns) - 4
@@ -43,7 +44,6 @@ def split_into_haplotypes(tped_D, K, N, tped_index_dict, chr_numb):
 
 
     ### Need to get the differnt lenghts
-
     len_dict = {}
     for i in range(0,len(CHR)):
         ## It's the length in Bp that we are after, not lenght of the list
@@ -66,15 +66,15 @@ def split_into_haplotypes(tped_D, K, N, tped_index_dict, chr_numb):
 
 
 ### Loop through and add K to start
-
     for i in range(0,len(CHR)):
-        window_dict = {}
+        window_list_of_dict.append(i)
+        window_list_of_dict[i] = {}
+        
         ### start at start
         counter =  len_dict[i][0]
         
         ## Each trip through the loop is one genetic window, defined in size by K
         while counter < len_dict[i][2]:
-            
             
             ### remove SNPs in the window with MAF < 10 %
             ## get the SNPs in the winow:
@@ -87,7 +87,6 @@ def split_into_haplotypes(tped_D, K, N, tped_index_dict, chr_numb):
                 try:
                     SNP_series= CHR[i][CHR[i][1]==SNPS.values[x]].squeeze()
                     SNP_series = SNP_series[4:]
-                    pdb.set_trace()
                 except:
                     pdb.set_trace()
                 ### Get alleles
@@ -101,7 +100,7 @@ def split_into_haplotypes(tped_D, K, N, tped_index_dict, chr_numb):
                 else:
                     Allele_1, Allele_2 = sorted( set(SNP_series))
                 ## Remove the row is MAF <= 10%
-                if SNP_series.value_counts(Allele_1)[0] or SNP_series.value_counts(Allele_1)[1] <= 0.10:
+                if SNP_series.value_counts(Allele_1)[0] <= 0.10 or SNP_series.value_counts(Allele_1)[1] <= 0.10: 
                     ## the dataframe is the dataframe execept the removed SNPs row
                     try:
                         CHR[i] =  CHR[i] [CHR[i][1] != SNPS.values[x]]
@@ -113,22 +112,19 @@ def split_into_haplotypes(tped_D, K, N, tped_index_dict, chr_numb):
                 continue
             else:
                 ## Randomly dowsample to 5 SNPs
-                window_dict[counter] = CHR[i][CHR[i][3].between(counter, counter + K)].sample(n=5)
+                window_list_of_dict[i][counter] = CHR[i][CHR[i][3].between(counter, counter + K)].sample(n=5)
                 counter += K
-        window_list_of_dict.append(window_dict)
+        print("end of i cycle") 
 
-    
     now = datetime.now()
     current_time = now.strftime("%H:%M:%S")
     print("Current Time =", current_time)
 
-    pdb.set_trace()
     ## chr_numb is the number of alleles to keep/extract from each pop.
     
 
     print("End of split")
-    
-
+    string_to_write = "" 
 ### Get only one pop from tfam:
 # tfam_DF[tfam_DF[0]=="YRI"]
 
@@ -137,6 +133,55 @@ def split_into_haplotypes(tped_D, K, N, tped_index_dict, chr_numb):
     ## need to find out each POPS order in the tped
     ##  it is from the order of the tfam
     ## but transposed 
+        
+        ### Count haplotypes!
+        # Save only values, i.e numb unique and 
+    for chr in  range(0,len(window_list_of_dict)):
+        
+
+         windows = window_list_of_dict[chr].keys()
+         for window in windows:
+
+            #window_list_of_dict[0].keys()
+            #Get columns belonigng to a pop:
+            # tped_index_dict[pops[0]]
+            for pop in pops:
+                
+                ## Remove the duplication of first position
+                #tped_index_dict[pop].pop(0)
+                ### Randomly draw haplotypes to look at, dependet on user supplied number of "chr"'
+                ### In practise the smallest sample size
+                if len(tped_index_dict[pop]) > chr_numb:
+                    haps = random.sample(tped_index_dict[pop][1:],chr_numb)
+                else:
+                    haps = tped_index_dict[pop][1:] 
+
+                ## get out the haps:
+                pop_haps = window_list_of_dict[chr][window].iloc[:,np.r_[haps]]
+                ## Haplotype richness:
+                richness = len(pop_haps.T.drop_duplicates())
+
+                hap_list = []
+                for haplotype in pop_haps:
+                    hap_list.append("".join(pop_haps[haplotype].tolist()))
+                
+                counts = Counter(hap_list)
+                p_sum = 0
+                for key in counts:
+                    p = counts[key]/len(hap_list) ** 2 
+                    p_sum += p
+                HH = 1 - p_sum
+                
+                string_to_write += "{}\t{}\t{}\t{}\t{}\n".format(chr + 1, pop, window, richness, HH) 
+    return string_to_write    
+        
+
+def calculate_HH(input_dict):
+    
+    
+    return value
+        
+
 
 if __name__ == "__main__":
     # Command line arguments
@@ -149,6 +194,8 @@ if __name__ == "__main__":
         help="Number of individuals to extract from each pop and analyse")
     parser.add_argument("-k", "--window_size", default = 10000,
         help="size of the haplotype window to divide the genome into.")
+    parser.add_argument("-o", "--outfile", default = "HH.txt",
+        help="Outfile name")
 
     
     args = parser.parse_args()
@@ -179,15 +226,15 @@ if __name__ == "__main__":
         ## First time we see this pop
         if not pop in tped_index_dict:
             
-            #tped_index_dict[pop] = []
+            #tped_indiex_dict[pop] = []
             tped_index_dict[pop] = [index]
         ## Just add all indices, we can get the stop with [-1] later
         tped_index_dict[pop].append(index)
         #if pop != last_pop:
         #    tped_index_dict[pop].append(index)
-
-    pdb.set_trace()
-    split_into_haplotypes(tped_DF, args.window_size, nr_ind, tped_index_dict, chr_numb)
+    output_string = split_into_haplotypes(tped_DF, int(args.window_size), nr_ind, tped_index_dict, chr_numb)
     
+    with open (args.outfile, "w") as f:
+        f.write(output_string)
     print("Goodbye!")
 
