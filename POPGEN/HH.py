@@ -11,6 +11,7 @@ import numpy as np
 from datetime import datetime
 from collections import OrderedDict
 from collections import Counter
+from statistics import mean
 
 import pdb
 __author__ = "Rickard Hammarén @hammarn"
@@ -23,8 +24,24 @@ def read_tped(tped):
     T_DF= T_DF.dropna(how="any", axis='columns')
     return T_DF
 
+def calculate_metrics(pop, pop_haps):
 
-def split_into_haplotypes(tped_D, K, N, tped_index_dict, chr_numb):
+    hap_list = []
+    for haplotype in pop_haps:
+        hap_list.append("".join(pop_haps[haplotype].tolist()))
+    
+    counts = Counter(hap_list)
+    p_sum = 0
+    for key in counts:
+        p = counts[key]/len(hap_list) ** 2 
+        p_sum += p
+    HH = 1 - p_sum
+    
+    #            string_to_write += "{}\t{}\t{}\t{}\t{}\n".format(chr + 1, pop, window, richness, HH) 
+    return  HH
+
+
+def split_into_haplotypes(tped_D, K, N, tped_index_dict, chr_numb, outfile):
     ###   CHR SNP_NAME BLAJ SNP_POS 
     ###   0       1    2         3
     
@@ -54,134 +71,126 @@ def split_into_haplotypes(tped_D, K, N, tped_index_dict, chr_numb):
         end = CHR[i][3].iloc[-1]
         lenght = end - start 
         len_dict[i] = [start, end, lenght]
-       #except:
-        #   pdb.set:trace()
-         #  print("hej")
-   
-    window_list_of_dict = []
     
     now = datetime.now()
     current_time = now.strftime("%H:%M:%S")
     print("Current Time =", current_time)
 
-
-### Loop through and add K to start
-    for i in range(0,len(CHR)):
-        window_list_of_dict.append(i)
-        window_list_of_dict[i] = {}
-        
-        ### start at start
-        counter =  len_dict[i][0]
-        
-        ## Each trip through the loop is one genetic window, defined in size by K
-        while counter < len_dict[i][2]:
-            
-            ### remove SNPs in the window with MAF < 10 %
-            ## get the SNPs in the winow:
-            SNPS = CHR[i][CHR[i][3].between(counter, counter + K)][1]
-
-            ##Check if the range is e
-
-            for x in range(0, len(SNPS) ):
-               
-                try:
-                    SNP_series= CHR[i][CHR[i][1]==SNPS.values[x]].squeeze()
-                    SNP_series = SNP_series[4:]
-                except:
-                    pdb.set_trace()
-                ### Get alleles
-                ### If genotype = 0
-
-                if len(set(SNP_series)) > 2:
-                    try:
-                        zero, Allele_1, Allele_2 = sorted( set(SNP_series))
-                    except:
-                        pdb.set_trace()
-                else:
-                    Allele_1, Allele_2 = sorted( set(SNP_series))
-                ## Remove the row is MAF <= 10%
-                if SNP_series.value_counts(Allele_1)[0] <= 0.10 or SNP_series.value_counts(Allele_1)[1] <= 0.10: 
-                    ## the dataframe is the dataframe execept the removed SNPs row
-                    try:
-                        CHR[i] =  CHR[i] [CHR[i][1] != SNPS.values[x]]
-                    except:
-                        pdb.set_trace()
-            ## Skip windows with fever than 5 SNPs 
-            if len(CHR[i][CHR[i][3].between(counter, counter + K)]) < 5:
-                counter += K
-                continue
-            else:
-                ## Randomly dowsample to 5 SNPs
-                window_list_of_dict[i][counter] = CHR[i][CHR[i][3].between(counter, counter + K)].sample(n=5)
-                counter += K
-        print("end of i cycle") 
-
-    now = datetime.now()
-    current_time = now.strftime("%H:%M:%S")
-    print("Current Time =", current_time)
-
-    ## chr_numb is the number of alleles to keep/extract from each pop.
-    
-
-    print("End of split")
-    string_to_write = "" 
-### Get only one pop from tfam:
-# tfam_DF[tfam_DF[0]=="YRI"]
 
     pops = tfam_DF[0].unique()
-
-    ## need to find out each POPS order in the tped
-    ##  it is from the order of the tfam
-    ## but transposed 
-        
-        ### Count haplotypes!
-        # Save only values, i.e numb unique and 
-    for chr in  range(0,len(window_list_of_dict)):
-        
-
-         windows = window_list_of_dict[chr].keys()
-         for window in windows:
-
-            #window_list_of_dict[0].keys()
-            #Get columns belonigng to a pop:
-            # tped_index_dict[pops[0]]
-            for pop in pops:
+    with  open(outfile, "w") as fh:
+    ### Loop through each chromsosome (i)
+        for i in range(0,len(CHR)):
+                #window_list_of_dict.append(i)
+                #window_list_of_dict[i] = {}
                 
-                ## Remove the duplication of first position
-                #tped_index_dict[pop].pop(0)
-                ### Randomly draw haplotypes to look at, dependet on user supplied number of "chr"'
-                ### In practise the smallest sample size
-                if len(tped_index_dict[pop]) > chr_numb:
-                    haps = random.sample(tped_index_dict[pop][1:],chr_numb)
-                else:
-                    haps = tped_index_dict[pop][1:] 
-
-                ## get out the haps:
-                pop_haps = window_list_of_dict[chr][window].iloc[:,np.r_[haps]]
-                ## Haplotype richness:
-                richness = len(pop_haps.T.drop_duplicates())
-
-                hap_list = []
-                for haplotype in pop_haps:
-                    hap_list.append("".join(pop_haps[haplotype].tolist()))
+                ### start at start
+                counter =  len_dict[i][0]
                 
-                counts = Counter(hap_list)
-                p_sum = 0
-                for key in counts:
-                    p = counts[key]/len(hap_list) ** 2 
-                    p_sum += p
-                HH = 1 - p_sum
-                
-                string_to_write += "{}\t{}\t{}\t{}\t{}\n".format(chr + 1, pop, window, richness, HH) 
-    return string_to_write    
-        
+                ## Each trip through the loop is one genetic window, defined in size by K
+                while counter < len_dict[i][2]:
+                    
+                    ### remove SNPs in the window with MAF < 10 %
+                    ## get the SNPs in the window:
+                    SNPS = CHR[i][CHR[i][3].between(counter, counter + K)][1]
+                    if len(SNPS) == 0:
+                            ## Window with no SNPS!
+                            counter += K
+                            continue
 
-def calculate_HH(input_dict):
+                    ##Check each window 
+                    for x in range(0, len(SNPS) ):
+                       
+                        try:
+                            SNP_series = CHR[i][CHR[i][1]==SNPS.values[x]].squeeze()
+                            SNP_series = SNP_series[4:]
+                        except:
+                            pdb.set_trace()
+                        ### Get alleles
+                        ### If genotype = 0
+
+                        if len(set(SNP_series)) > 2:
+                            try:
+                                zero, Allele_1, Allele_2 = sorted( set(SNP_series))
+                            except:
+                                pdb.set_trace()
+                        else:
+                            Allele_1, Allele_2 = sorted( set(SNP_series))
+                  
+                    ### Below is the code that is window dependent.
+                    ### In order to reduce randomness this is repeated 10 times and only the average is saved
+                    HH_dict = {}
+                    richness_dict = {}
+                    ## set up the empty lists
+                    for pop in pops:
+                        HH_dict[pop] = []
+                        richness_dict[pop] = []
+                        ##here 
+                    for iteration in range(1,11):
+                        ## Remove the row is MAF <= 10%
+                        if SNP_series.value_counts(Allele_1)[0] <= 0.10 or SNP_series.value_counts(Allele_1)[1] <= 0.10: 
+                            ## the dataframe is the dataframe execept the removed SNPs row
+                            try:
+                                CHR[i] =  CHR[i] [CHR[i][1] != SNPS.values[x]]
+                            except:
+                                pdb.set_trace()
+                        ## Skip windows with fever than 5 SNPs 
+                        if len(CHR[i][CHR[i][3].between(counter, counter + K)]) < 5:
+                            ## Add K to go to the next window
+                            counter += K
+                            continue
+                        else:
+                            window = CHR[i][CHR[i][3].between(counter, counter + K)].sample(n=5)
+                            ## Randomly dowsample to 5 SNPs
+                           # window_list_of_dict[i][counter] = CHR[i][CHR[i][3].between(counter, counter + K)].sample(n=5)
+
+                                ### Randomly draw haplotypes to look at, dependet on user supplied number of "chr"'
+                            ### In practise the smallest sample size
+                            for pop in pops:
+                                if len(tped_index_dict[pop]) > chr_numb:
+                                    haps = random.sample(tped_index_dict[pop][1:],chr_numb)
+                                    ## get out the haps
+                                    pop_haps = window.iloc[:,np.r_[haps]]
+                                    richness = len(pop_haps.T.drop_duplicates())
+                                    HH  = calculate_metrics(pop, pop_haps)
+                                    HH_dict[pop].append(HH)
+                                    richness_dict[pop].append(richness)    
+
+                                else:
+                                    haps = tped_index_dict[pop][1:]
+                                    ## get out the haps
+                                    pop_haps = window.iloc[:,np.r_[haps]]
+                                    richness = len(pop_haps.T.drop_duplicates())
+                                    HH  = calculate_metrics(pop, pop_haps)
+                                    HH_dict[pop].append(HH)
+                                    richness_dict[pop].append(richness)    
+                    
+                            ## Calcultate averages at the end of 10 iterations
+                            ## We only need to save/write to file is there was one sampling with values
+                    
+                    for pop in pops:
+
+                        try: 
+                            HH_ave = mean(HH_dict[pop])
+                            richness_ave = mean(richness_dict[pop])
+                            string_to_write = "{}\t{}\t{}\t{}\t{}\n".format(i + 1, pop, counter, HH_ave, richness_ave)
+                            fh.write(string_to_write)
+                        except:
+                            ## empty window
+                             counter += K
+                             continue
+                    ## Done with a window, on to next    
+                    counter += K
+             
+                now = datetime.now()
+                current_time = now.strftime("%H:%M:%S")
+                print("Current Time =", current_time)
+                print("Done with chr {}".format(i+1)) 
+
     
     
-    return value
-        
-
+    
+                
 
 if __name__ == "__main__":
     # Command line arguments
@@ -232,9 +241,10 @@ if __name__ == "__main__":
         tped_index_dict[pop].append(index)
         #if pop != last_pop:
         #    tped_index_dict[pop].append(index)
-    output_string = split_into_haplotypes(tped_DF, int(args.window_size), nr_ind, tped_index_dict, chr_numb)
+    ut_nam = args.outfile
+    split_into_haplotypes(tped_DF, int(args.window_size), nr_ind, tped_index_dict, chr_numb, ut_nam)
     
-    with open (args.outfile, "w") as f:
-        f.write(output_string)
+    #with open (args.outfile, "w") as f:
+    #    f.write(output_string)
     print("Goodbye!")
 
