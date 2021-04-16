@@ -9,8 +9,8 @@ def read_input(input_file):
     return pd_data
 
 def clean_input(cleaning_file, output):
-    #cleaning_file = cleaning_file.dropna()
-    cleaning_file = cleaning_file[cleaning_file["V1"].apply(lambda x: str(x).isdigit())]
+    cleaning_file = cleaning_file.dropna()
+    #cleaning_file = cleaning_file[cleaning_file["V1"].apply(lambda x: str(x).isdigit())]
     cleaning_file.to_csv(output, mode='a' ,sep = " ", index = False, columns = ["V2","V1", "V3", "V4", "V5", "V6"], header = False, float_format =  "%.0f")
 
 
