@@ -29,7 +29,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
     inputs =  args.input
     inputs = natsort.natsorted(inputs)
-    
+    output = args.output 
     datalist = [] 
     for chromosome in inputs:
         datalist.append(read_input(chromosome))
@@ -37,7 +37,4 @@ if __name__ == "__main__":
 
     for item in datalist:
         clean_input(item, args.output)
-
-    
-
 
