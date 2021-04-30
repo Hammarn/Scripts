@@ -24,6 +24,25 @@ def read_tped(tped):
     T_DF= T_DF.dropna(how="any", axis='columns')
     return T_DF
 
+def read_haps(haps):
+    tped = haps
+    T_DF = pd.read_csv(tped, delimiter=" ", header = None)
+    #remove trailing whitespace, a bit crude though
+    T_DF= T_DF.dropna(how="any", axis='columns')
+    
+    ## Replace 0 with the first Allele
+    #pdb.set_trace()
+    #T_DF =  T_DF.iloc[:,5:-1].replace(0, T_DF[3])
+    #Replace 1 with  the second allele
+    #T_DF = T_DF.iloc[:,5:-1].replace(1, T_DF[4])
+    return T_DF
+
+def read_sample(sample):
+    pdb.set_trace()
+    return
+
+
+
 def calculate_metrics(pop, pop_haps):
 
     hap_list = []
@@ -66,9 +85,16 @@ def split_into_haplotypes(tped_D, K, N, tped_index_dict, chr_numb, outfile):
         ## It's the length in Bp that we are after, not lenght of the list
         ## This could also be done on a .map file. i.e from 1000 genomes
         # Will it matter? Not sure, could ask 
-       #try: 
-        start = CHR[i][3].iloc[0]
-        end = CHR[i][3].iloc[-1]
+       #try:
+
+        if type(CHR[i][3].iloc[0]) == int or type(CHR[i][3].iloc[0]) == float:
+            ## we have a tped file as input
+            dataframe_column_int = 3
+        else:
+            dataframe_column_int = 2
+
+        start = CHR[i][dataframe_column_int].iloc[0]
+        end = CHR[i][dataframe_column_int].iloc[-1]
         lenght = end - start 
         len_dict[i] = [start, end, lenght]
     
@@ -92,7 +118,7 @@ def split_into_haplotypes(tped_D, K, N, tped_index_dict, chr_numb, outfile):
                     
                     ### remove SNPs in the window with MAF < 10 %
                     ## get the SNPs in the window:
-                    SNPS = CHR[i][CHR[i][3].between(counter, counter + K)][1]
+                    SNPS = CHR[i][CHR[i][dataframe_column_int].between(counter, counter + K)][1]
                     if len(SNPS) == 0:
                             ## Window with no SNPS!
                             counter += K
@@ -101,22 +127,34 @@ def split_into_haplotypes(tped_D, K, N, tped_index_dict, chr_numb, outfile):
                     ##Check each window 
                     for x in range(0, len(SNPS) ):
                        
-                        try:
-                            SNP_series = CHR[i][CHR[i][1]==SNPS.values[x]].squeeze()
+                        SNP_series = CHR[i][CHR[i][1]==SNPS.values[x]].squeeze()
+                        
+                        if dataframe_column_int == 3:
                             SNP_series = SNP_series[4:]
-                        except:
-                            pdb.set_trace()
+                        
+                        else:
+                            Allele_1_base =  SNP_series[3] 
+                            Allele_2_base =  SNP_series[4]
+                            SNP_series = SNP_series[5:]
+                        
+                        
+                        
                         ### Get alleles
                         ### If genotype = 0
-
-                        if len(set(SNP_series)) > 2:
-                            try:
-                                zero, Allele_1, Allele_2 = sorted( set(SNP_series))
-                            except:
-                                pdb.set_trace()
+                        if dataframe_column_int == 3:
+                            ### TPED
+                            if len(set(SNP_series)) > 2:
+                                try:
+                                    zero, Allele_1, Allele_2 = sorted( set(SNP_series))
+                                except:
+                                    pdb.set_trace()
+                            else:
+                                Allele_1, Allele_2 = sorted( set(SNP_series))
                         else:
-                            Allele_1, Allele_2 = sorted( set(SNP_series))
-                  
+                            ## .haps by defenition
+                            Allele_1 = 0
+                            Allele_2 = 1
+                        
                     ### Below is the code that is window dependent.
                     ### In order to reduce randomness this is repeated 10 times and only the average is saved
                     HH_dict = {}
@@ -128,21 +166,24 @@ def split_into_haplotypes(tped_D, K, N, tped_index_dict, chr_numb, outfile):
                         ##here 
                     for iteration in range(1,11):
                         ## Remove the row is MAF <= 10%
-                        if SNP_series.value_counts(Allele_1)[0] <= 0.10 or SNP_series.value_counts(Allele_1)[1] <= 0.10: 
+                        ## As long as the value within value_counts() is a string it will return a fraction, which is what we want
+                        if SNP_series.value_counts("any_key")[0] <= 0.10 or SNP_series.value_counts("any_key")[1] <= 0.10: 
                             ## the dataframe is the dataframe execept the removed SNPs row
                             try:
                                 CHR[i] =  CHR[i] [CHR[i][1] != SNPS.values[x]]
                             except:
                                 pdb.set_trace()
+
+
                         ## Skip windows with fever than 5 SNPs 
-                        if len(CHR[i][CHR[i][3].between(counter, counter + K)]) < 5:
+                        if len(CHR[i][CHR[i][dataframe_column_int].between(counter, counter + K)]) < 5:
                             ## Add K to go to the next window
                             counter += K
                             continue
                         else:
-                            window = CHR[i][CHR[i][3].between(counter, counter + K)].sample(n=5)
+                            window = CHR[i][CHR[i][dataframe_column_int].between(counter, counter + K)].sample(n=5)
                             ## Randomly dowsample to 5 SNPs
-                           # window_list_of_dict[i][counter] = CHR[i][CHR[i][3].between(counter, counter + K)].sample(n=5)
+                           # window_list_of_dict[i][counter] = CHR[i][CHR[i][dataframe_column_int].between(counter, counter + K)].sample(n=5)
 
                                 ### Randomly draw haplotypes to look at, dependet on user supplied number of "chr"'
                             ### In practise the smallest sample size
@@ -157,6 +198,7 @@ def split_into_haplotypes(tped_D, K, N, tped_index_dict, chr_numb, outfile):
                                     richness_dict[pop].append(richness)    
 
                                 else:
+                                    pdb.set_trace()
                                     haps = tped_index_dict[pop][1:]
                                     ## get out the haps
                                     pop_haps = window.iloc[:,np.r_[haps]]
@@ -194,11 +236,15 @@ def split_into_haplotypes(tped_D, K, N, tped_index_dict, chr_numb, outfile):
 
 if __name__ == "__main__":
     # Command line arguments
-    parser = argparse.ArgumentParser("Takes tped files and calulates haplotype heterozygosity in a given window")
+    parser = argparse.ArgumentParser("Takes tped files or .haps files and calulates haplotype heterozygosity in a given window")
     parser.add_argument("-t", "--tped",
         help="Name of the tped file")
     parser.add_argument("-f", "--tfam",
         help="Name of tfam file")
+    parser.add_argument("-hs", "--haps", 
+        help="Name of haps file")
+    parser.add_argument("-s", "--sample",
+        help="Name of sample file")
     parser.add_argument("-n_inds", "--number_of_individuals", default = 10,
         help="Number of individuals to extract from each pop and analyse")
     parser.add_argument("-k", "--window_size", default = 10000,
@@ -213,21 +259,45 @@ if __name__ == "__main__":
     ## it was called chr in the original Schlebusch 2012 paper
     ## 2 alleles/chr per individual per population
     chr_numb = 2 * int(args.number_of_individuals)
-    tped_DF = read_tped(args.tped)
     
-    tfam_DF = read_tped(args.tfam)
-    nr_ind = len(tfam_DF)
-    pops = tfam_DF[0].unique()
+    ##  Set up check to determine if we are doing tped or .haps approach?
+   
 
+
+
+    if args.tped is not None:
+        tped_DF = read_tped(args.tped)
+        
+        tfam_DF = read_tped(args.tfam)
+        nr_ind = len(tfam_DF)
+        pops = tfam_DF[0].unique()
+   
+    if args.haps is not None:
+        haps_check = True
+        tped_DF = read_haps(args.haps)
+        
+        tfam_DF = read_haps(args.sample)
+        ## Remove the row with  0       0        0       D       D    D            B
+        tfam_DF = tfam_DF[tfam_DF[0]!="0"]
+        tfam_DF = tfam_DF[tfam_DF[0]!="ID_1"]
+        nr_ind = len(tfam_DF)
+        pops = tfam_DF[0].unique()
+         
+       ### We are runing using .haps files
+       ## One file Chr!
     ## Get the FID from tfam in a list
     index_list =  list(tfam_DF[0])
     ## Duplicate each item in the list
     index_list = [val for val in index_list for _ in (0, 1)]
     ### add 4 to the begining of index to corresppnd to tped format
-    index_list = [0,1,2,3] + index_list
+    if haps_check == True
+         index_list = [0,1,2,3,4] + index_list
+    else:
+        index_list = [0,1,2,3] + index_list
     
     tped_index_dict = OrderedDict()
     last_pop = "FALSE"
+    
     ## Create the index list. So we know wich column of the tped that belongs to each pop.
     for index, pop in enumerate(index_list):
         if isinstance(pop, int):
@@ -241,6 +311,8 @@ if __name__ == "__main__":
         tped_index_dict[pop].append(index)
         #if pop != last_pop:
         #    tped_index_dict[pop].append(index)
+    
+    
     ut_nam = args.outfile
     split_into_haplotypes(tped_DF, int(args.window_size), nr_ind, tped_index_dict, chr_numb, ut_nam)
     
