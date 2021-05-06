@@ -7,6 +7,7 @@ import os
 import random
 import pandas as pd
 import numpy as np
+import sys
 
 from datetime import datetime
 from collections import OrderedDict
@@ -52,8 +53,10 @@ def calculate_metrics(pop, pop_haps):
     
     counts = Counter(hap_list)
     p_sum = 0
+    if pop == "DRC_Bangubangu":
+        pdb.set_trace()
     for key in counts:
-        p = counts[key]/len(hap_list) ** 2 
+        p = (counts[key]/len(hap_list))** 2 
         p_sum += p
     HH = 1 - p_sum
     
@@ -73,9 +76,7 @@ def split_into_haplotypes(tped_D, K, N, tped_index_dict, chr_numb, outfile):
     ## Need to also read tfam
 
     ## SPLIT into a DF per CHR
-
     CHR = [y for x, y in tped_DF.groupby(0, as_index=False)]
-    
     #first_SNP = tped_DF[3][0]
     #last_SNP = tped_DF[3].iloc[-1]
 
@@ -103,8 +104,8 @@ def split_into_haplotypes(tped_D, K, N, tped_index_dict, chr_numb, outfile):
     current_time = now.strftime("%H:%M:%S")
     print("Current Time =", current_time)
 
+    pops = tped_index_dict.keys()
 
-    pops = tfam_DF[0].unique()
     with  open(outfile, "w") as fh:
     ### Loop through each chromsosome (i)
         for i in range(0,len(CHR)):
@@ -138,7 +139,6 @@ def split_into_haplotypes(tped_D, K, N, tped_index_dict, chr_numb, outfile):
                             Allele_1_base =  SNP_series[3] 
                             Allele_2_base =  SNP_series[4]
                             SNP_series = SNP_series[5:]
-                        
                         
                         
                         ### Get alleles
@@ -235,9 +235,6 @@ def split_into_haplotypes(tped_D, K, N, tped_index_dict, chr_numb, outfile):
                 print("Current Time =", current_time)
                 print("Done with chr {}".format(i+1)) 
 
-    
-    
-    
                 
 
 if __name__ == "__main__":
@@ -257,7 +254,11 @@ if __name__ == "__main__":
         help="size of the haplotype window to divide the genome into.")
     parser.add_argument("-o", "--outfile", default = "HH.txt",
         help="Outfile name")
-
+    parser.add_argument('--skip', dest='skip', action='store_true',
+        help="Skip populations with too small sample size")
+    parser.add_argument('--no-skip', dest='skip', action='store_false',
+        help="Don't skip populations with too small sample size")
+    parser.set_defaults(skip=True) 
     
     args = parser.parse_args()
 
@@ -268,7 +269,6 @@ if __name__ == "__main__":
     
     ##  Set up check to determine if we are doing tped or .haps approach?
    
-
 
 
     if args.tped is not None:
@@ -317,8 +317,21 @@ if __name__ == "__main__":
         tped_index_dict[pop].append(index)
         #if pop != last_pop:
         #    tped_index_dict[pop].append(index)
-    
-    
+  
+    pops_to_pop = []
+   ## Check input pops
+    for key in tped_index_dict.keys():
+       if len(tped_index_dict[key][:-1]) < chr_numb :
+           
+           if args.skip:
+                pops_to_pop.append(key)
+           else:
+               print("Error!!:")
+               print("Population {} has fewer indivduals than the number of minimum individuals specified '{}'".format( key, chr_numb/2) )
+               sys.exit()
+    for key in pops_to_pop:
+        tped_index_dict.pop(key)
+
     ut_nam = args.outfile
     split_into_haplotypes(tped_DF, int(args.window_size), nr_ind, tped_index_dict, chr_numb, ut_nam)
     
