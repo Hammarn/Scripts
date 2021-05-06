@@ -32,6 +32,7 @@ def read_haps(haps):
     
     ## Replace 0 with the first Allele
     #pdb.set_trace()
+    ## below is too slow and only work for the first 4000 individuals
     #T_DF =  T_DF.iloc[:,5:-1].replace(0, T_DF[3])
     #Replace 1 with  the second allele
     #T_DF = T_DF.iloc[:,5:-1].replace(1, T_DF[4])
@@ -133,6 +134,7 @@ def split_into_haplotypes(tped_D, K, N, tped_index_dict, chr_numb, outfile):
                             SNP_series = SNP_series[4:]
                         
                         else:
+                            
                             Allele_1_base =  SNP_series[3] 
                             Allele_2_base =  SNP_series[4]
                             SNP_series = SNP_series[5:]
@@ -140,6 +142,7 @@ def split_into_haplotypes(tped_D, K, N, tped_index_dict, chr_numb, outfile):
                         
                         
                         ### Get alleles
+                        ## I think this whoel getting Alleles thing is reduntant
                         ### If genotype = 0
                         if dataframe_column_int == 3:
                             ### TPED
@@ -185,27 +188,30 @@ def split_into_haplotypes(tped_D, K, N, tped_index_dict, chr_numb, outfile):
                             ## Randomly dowsample to 5 SNPs
                            # window_list_of_dict[i][counter] = CHR[i][CHR[i][dataframe_column_int].between(counter, counter + K)].sample(n=5)
 
-                                ### Randomly draw haplotypes to look at, dependet on user supplied number of "chr"'
+                                ### Randomly draw haplotypes to look at, depending on user supplied number of "chr"'
                             ### In practise the smallest sample size
                             for pop in pops:
                                 if len(tped_index_dict[pop]) > chr_numb:
+                                    # Downsample to chr_numb
                                     haps = random.sample(tped_index_dict[pop][1:],chr_numb)
-                                    ## get out the haps
-                                    pop_haps = window.iloc[:,np.r_[haps]]
-                                    richness = len(pop_haps.T.drop_duplicates())
-                                    HH  = calculate_metrics(pop, pop_haps)
-                                    HH_dict[pop].append(HH)
-                                    richness_dict[pop].append(richness)    
-
                                 else:
-                                    pdb.set_trace()
                                     haps = tped_index_dict[pop][1:]
-                                    ## get out the haps
-                                    pop_haps = window.iloc[:,np.r_[haps]]
-                                    richness = len(pop_haps.T.drop_duplicates())
-                                    HH  = calculate_metrics(pop, pop_haps)
-                                    HH_dict[pop].append(HH)
-                                    richness_dict[pop].append(richness)    
+
+                                pop_haps = window.iloc[:,np.r_[haps]]
+                                if dataframe_column_int == 2:
+                                    # Haps mode
+                                    ## For .haps we need to replace the 0 1 with the actual nucleotides here
+                                    pop_haps = pop_haps.T.replace(0, window[3]) 
+                                    pop_haps = pop_haps.replace(1, window[4])
+                                    ## transpose back
+                                    pop_haps = pop_haps.T
+                                
+                                ## Metrics
+                                ## len()  on a datframe is number of rows       
+                                richness = len(pop_haps.T.drop_duplicates())
+                                HH  = calculate_metrics(pop, pop_haps)
+                                HH_dict[pop].append(HH)
+                                richness_dict[pop].append(richness)    
                     
                             ## Calcultate averages at the end of 10 iterations
                             ## We only need to save/write to file is there was one sampling with values
@@ -290,7 +296,7 @@ if __name__ == "__main__":
     ## Duplicate each item in the list
     index_list = [val for val in index_list for _ in (0, 1)]
     ### add 4 to the begining of index to corresppnd to tped format
-    if haps_check == True
+    if haps_check == True:
          index_list = [0,1,2,3,4] + index_list
     else:
         index_list = [0,1,2,3] + index_list
