@@ -7,14 +7,15 @@ import sys
 
 import pdb
 pd.options.mode.chained_assignment = None  # default='warn'
-__author__ = "Rickard Hammarén @hammarn"
 
+
+__author__ = "Rickard Hammarén @hammarn"
 
 
 def read_input(in_file):
     in_file = in_file
     T_DF = pd.read_csv(in_file, delimiter="\t", header = None)
-    return T_DF
+    return T_F
 
 def determine_chr(in_file):
     
@@ -23,8 +24,8 @@ def determine_chr(in_file):
 def main(arguments):
     input_files = arguments.input
     bims = arguments.bim
+    output_name = arguments.output_name
     chr_pat = re.compile('chr\d+')
-    #uppercase = re.compile('CHR\d+')
     haplo_num_pat = re.compile('hap_\d+')
     
     file_dict = {}
@@ -39,14 +40,16 @@ def main(arguments):
         geno_dict[num] = read_input(bim) 
         file_dict[num] = read_input(bim) 
         ## Save only the Snp-location in the DF
-        file_dict[num]=file_dict[num][[3]]
-        file_dict[num].columns = ["SNP"]
+        file_dict[num]=file_dict[num][[0,1,2,3]]
+        file_dict[num].columns = ["CHR","SNP_name","CM", "SNP"]
     
 
     for f in input_files:
         ##ahplotype:  haplo_num_pat.search(f).group(0).split("_")[1]
         ## CHR num :  chr_pat.search(f).group(0).split("chr")[1]
         CHR_num = chr_pat.search(f).group(0).split("chr")[1]
+        ## Account for 0 indexing in the dict
+        CHR_num = int(CHR_num) - 1
         hap_num = haplo_num_pat.search(f).group(0).split("_")[1]
         try:
             new_df = read_input(f)
@@ -64,46 +67,16 @@ def main(arguments):
         file_dict[int(CHR_num)] =  file_dict[int(CHR_num)].astype(str)
         new_df = new_df.astype(str)
 
-        pdb.set_trace()
-        #file_dict[int(CHR_num)] = file_dict[int(CHR_num)].merge(new_df, left_on ="SNP", right_on ="SNP", how = "left",left_index=False, right_index=False).fillna("0")
         file_dict[int(CHR_num)] = file_dict[int(CHR_num)].merge(new_df, left_on ="SNP", right_on ="SNP", how = "outer",left_index=False, right_index=False).fillna("0")
         #delete after each run through
         del new_df
-        #else:
-            ## we should no long end up here
-         #   pdb.set_trace()
-            ## initiate and add first entry
-          #  geno_dict[CHR_num] = []
-           # pdb.set_trace()
-           # geno_dict[CHR_num].append(read_input(f))
-           # file_dict[CHR_num] = []
-           # file_dict[CHR_num].append(f)
 
-    ## hap_num should be the last file/numer after the loop
-    number_ind = int(hap_num)/2
+    #number_ind = int(hap_num)/2
     
-    # Merge each 
+    for CHR in file_dict.keys():
+        file_dict[CHR].to_csv("{}.tped".format(output_name[0]), index = False, header = False, sep = " ", mode = "a")
 
-    pdb.set_trace()
-
-    print("Test")
-    #
-
-### TODO
-
-## Read all files
-    # One per Chr and Hap, so n*2
-    
-### DATAstructure:
-    # Merge each individuals files? set missing data as 0
-
-    #FInal structure:
-#SNP    # ind1_hap1     ind1_hap2
-#170044    # A             T
-#170045    # T             0
-#170046    # T             G
-
-## That should be a TPED right? just need to add CHR, locus name, empty, BP_pos then the genetypes follow
+    print("Output written to {}.tped".format(output_name[0]))
 
 if __name__ == "__main__":
     # Command line arguments
@@ -113,8 +86,10 @@ if __name__ == "__main__":
    
     parser.add_argument("-b", "--bim", nargs = '+',
     help= "A bim-file per Chromosome")
+    
+    parser.add_argument("-o", "--output_name", nargs = '+',
+    help= "Name of the population to create the final tped for")
 
     args = parser.parse_args()
-    
     
     main(args) 
