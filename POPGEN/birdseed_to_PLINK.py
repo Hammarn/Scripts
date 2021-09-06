@@ -9,6 +9,8 @@ import pdb
 
 pd.options.mode.chained_assignment = None
 
+__author__ = "Rickard Hammarén @hammarn"
+
 def read_annotation(in_file):
     in_file = in_file
     T_DF = pd.read_csv(in_file, delimiter="\t",  index_col = 0)
@@ -26,9 +28,9 @@ def find_genotype(genotype, ALLELE_A, ALLELE_B):
     try:
         for allele in genotype:
             if allele == "A":
-                return_genotype = return_genotype + ALLELE_A
+                return_genotype = return_genotype + " " + ALLELE_A
             elif allele == "B":
-                return_genotype = return_genotype + ALLELE_B
+                return_genotype = return_genotype + " " + ALLELE_B
     except TypeError:
         ## An empty genotype will throw a typeerror:
         if genotype == "nan":
@@ -56,13 +58,25 @@ def replace(row, annotation):
     return row
 
 def main(arguments):
-    
     annotation = read_annotation(arguments.annotation)
 
     bird = read_birdseed( arguments.birdseed)
-    
-    df = bird.apply(lambda row : replace(row,annotation), axis = 1)
+   
+    ## Tped format
+    ## Chromosome dbSNP 0 Physical_Position genotypes seperated by space
+
+    bird = bird.apply(lambda row : replace(row,annotation), axis = 1)
+    ny = bird.merge(annotation[["Chromosome", "dbSNP", "Physical_Position"]], left_index = True, right_index = True)
+    cols = list(ny.columns.values)
+    # Move three last to first
+    cols = cols[-3:] + cols[:-3]
+
+    ny = ny[cols]
+    #Inser the centimorgan field in the correct infromation (missing)
+    ny.insert(2, 'cM', 0)
     pdb.set_trace()
+    ny.to_csv("{}.tped".format(arguments.output_name), index = False, header = False, sep = " ")
+
 
     print("Goodbye")
 
