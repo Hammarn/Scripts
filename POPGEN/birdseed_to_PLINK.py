@@ -74,11 +74,10 @@ def main(arguments):
     ny = ny[cols]
     #Inser the centimorgan field in the correct infromation (missing)
     ny.insert(2, 'cM', 0)
-    pdb.set_trace()
     ny.to_csv("{}.tped".format(arguments.output_name), index = False, header = False, sep = " ")
 
 
-    print("Goodbye")
+    print("Output tped file saved to {}.tped".format(arguments.output_name))
 
 
 
@@ -99,7 +98,7 @@ SNP_A-8575115	rs9629043	1	554636	A	G
 SNP_A-8575371	rs11510103	1	557616	C	T""")
     
     parser.add_argument("-o", "--output_name", 
-    help= "Name of the final outputfile")
+    help= "Base name (prefix) of the final outputfile")
 
     args = parser.parse_args()
 
