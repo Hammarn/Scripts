@@ -27,7 +27,7 @@ def read_input(input_file):
 def do_UMAP(data):
     print("Performing dimensionality reduction")
     reducer = umap.UMAP()
-    #data_NO_index=data.drop(data.columns[[0,1]], axis=1)
+    ## set missing data to 0 and transpose the data so the rows are individuals not SNPs
     embedding = reducer.fit_transform(np.nan_to_num(data.T))
     return embedding
 
@@ -40,7 +40,7 @@ def plotting(umaped_data, bim, fam, output, key_file):
     source = pd.concat([fam[['fid','iid']], umaped_df], axis=1) 
     source.set_index('fid')
     source  = source.rename(columns={0: "x", 1: "y"})
-    p = figure(title="UMAP of raw genetic genotypes", toolbar_location="above", x_axis_label="UMAP 1",y_axis_label="UMAP 2",plot_width = 1500, plot_height = 1000)
+    p = figure(title="UMAP of genotypes", toolbar_location="above", x_axis_label="UMAP 1",y_axis_label="UMAP 2",plot_width = 1500, plot_height = 1000)
     
     fids = source.fid.unique()
     lenght_of_leg = len(fids)/2
@@ -93,14 +93,22 @@ def plotting(umaped_data, bim, fam, output, key_file):
         p.legend.label_text_font_size = '10pt' 
 
     p.legend.click_policy="mute"
-    p.add_tools(HoverTool(
-     tooltips = [
-         ('Population', '@fid'),
-         ('Region', '@Region'),
-         ('Individual', '@IID'),
-             ]
-         ))
-    
+    if key:
+        p.add_tools(HoverTool(
+         tooltips = [
+             ('Population', '@fid'),
+             ('Region', '@Region'),
+             ('Individual', '@IID'),
+                 ]
+             ))
+    else:
+        p.add_tools(HoverTool(
+         tooltips = [
+             ('Population', '@fid'),
+             ('Region', '@Region'),
+                 ]
+             ))
+
     
     outfile = output
     print("Saving output to {}.html".format(outfile)) 
