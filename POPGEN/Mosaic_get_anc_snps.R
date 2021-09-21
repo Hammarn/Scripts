@@ -38,7 +38,6 @@ for (chr in 1:nchrno){
     anc.calls=t(apply(pos_localanc[[chr]][a,,],2,function(x) x>0.8)) 
     anc.genos=(target.genos+1)*anc.calls
     anc.snps=cbind(snps[[chr]],anc.genos)
-    write.table(anc.snps, paste(target,"_ancestry_",a,"_chr",i,".haps",sep=""), sep = "\t", row.names = FALSE,quote = FALSE,col.names = F)
-    print(paste("Done with", paste(target,"_ancestry_",a,"_chr",i,".haps",sep=""))
-  }
+    write.table(anc.snps, paste(target,"_ancestry_",a,"_chr",chr,".haps",sep=""), sep = "\t", row.names = FALSE,quote = FALSE,col.names = F)
+    print(paste("Done with", paste(target,"_ancestry_",a,"_chr",chr,".haps",sep="")))
 }
