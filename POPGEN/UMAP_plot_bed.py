@@ -2,6 +2,7 @@
 import argparse
 import pandas as pd
 import numpy as np
+#pip install umap-learn
 import umap.umap_ as umap
 import warnings
 import sys
