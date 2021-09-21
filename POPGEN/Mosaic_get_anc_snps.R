@@ -25,18 +25,17 @@ anc=lapply(1:nchrno, function(ch) lapply(1:NUMA, function(h) pos_localanc[[ch]][
 snps=list()
 for (i in 1:nchrno) {
     snps[[i]]= read.table(paste0("snpfile.",chrnos[i]))
+    snps[[i]] <- snps[[i]][,c(2,1,4,5,6)]
 }
-positions=lapply(1:nchrno, function(i) lapply(1:NUMA, function(h) snps[[i]][anc[[i]][[h]],4])) 
 
-for (i in 1:22){
-  for (hap in 1:(length(alpha)*2)){
-   if (hap %% 2  ){
-     # Get  First Allele
-     to_write<-snps[[i]][which(snps[[i]]$V4 %in% positions[[i]][[hap]]),][,c(4,5)]
-   } else {
-     #second allele
-     to_write<-snps[[i]][which(snps[[i]]$V4 %in% positions[[i]][[hap]]),][,c(4,6)]
-   }
-    write.table(to_write, paste(target"_ancestry_",a,"_chr",i,"_hap_",hap,".bimlike",sep=""), sep = "\t", row.names = FALSE,quote = FALSE,col.names = F)
+# Not needed
+#positions=lapply(1:nchrno, function(i) lapply(1:NUMA, function(h) snps[[i]][anc[[i]][[h]],4])) 
+
+for (chr in 1:22){
+    target.genos=as.integer(as.matrix(laf_open_fwf(pase0("../../MOSAIC_inputs/AFARgenofile.",chr), column_widths=rep(1,NUMA),column_types=rep("character",NUMA))[,]))
+    anc.calls=t(apply(pos_localanc[[chr]][a,,],2,function(x) x>0.8)) 
+    anc.genos=(target.genos+1)*anc.calls
+    anc.snps=cbind(snps,anc.genos)
+    write.table(anc.snps, paste(target"_ancestry_",a,"_chr",i,"_",hap,".haps",sep=""), sep = "\t", row.names = FALSE,quote = FALSE,col.names = F)
   }
 }
