@@ -1,5 +1,9 @@
 #!/usr/bin/env Rscrip
 ###require(MOSAIC)
+
+## Example usage:
+## Rscript ~/Scripts/POPGEN/Mosaic_get_anc_snps.R AFAR_2way_1-8_1-22_574_60_0.99_100.RData localanc_AFAR_2way_1-8_1-22_574_60_0.99_100.RData 2
+
 library(data.table)
 library("LaF")
 
@@ -27,7 +31,7 @@ pos_localanc=grid_to_pos(localanc, "../../MOSAIC_inputs/", g.loc, chrnos) # load
 snps=list()
 for (i in 1:nchrno) {
     snps[[i]]= read.table(paste0("../../MOSAIC_inputs/snpfile.",chrnos[i]))
-    snps[[i]] <- snps[[i]][,c(2,1,4,5,6)]
+    snps[[i]] <- snps[[i]][,c(2,1,3,4,5,6)]
 }
 
 # Not needed
@@ -38,6 +42,6 @@ for (chr in 1:nchrno){
     anc.calls=t(apply(pos_localanc[[chr]][a,,],2,function(x) x>0.8)) 
     anc.genos=(target.genos+1)*anc.calls
     anc.snps=cbind(snps[[chr]],anc.genos)
-    write.table(anc.snps, paste(target,"_ancestry_",a,"_chr",chr,".haps",sep=""), sep = "\t", row.names = FALSE,quote = FALSE,col.names = F)
-    print(paste("Done with", paste(target,"_ancestry_",a,"_chr",chr,".haps",sep="")))
+    write.table(anc.snps, paste(target,"_ancestry_",a,"_chr",chr,".tped",sep=""), sep = "\t", row.names = FALSE,quote = FALSE,col.names = F)
+    print(paste("Done with", paste(target,"_ancestry_",a,"_chr",chr,".tped",sep="")))
 }
