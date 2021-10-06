@@ -31,7 +31,7 @@ pos_localanc=grid_to_pos(localanc, "../../MOSAIC_inputs/", g.loc, chrnos) # load
 snps=list()
 for (i in 1:nchrno) {
     snps[[i]]= read.table(paste0("../../MOSAIC_inputs/snpfile.",chrnos[i]))
-    snps[[i]] <- snps[[i]][,c(2,1,3,4,5,6)]
+    snps[[i]] <- snps[[i]][,c(2,1,3,4)]
 }
 
 # Not needed

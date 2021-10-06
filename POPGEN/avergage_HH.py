@@ -36,6 +36,7 @@ def find_S_from_filename(files):
 def average_d(HH_dict):
     # Chr avg. HH_dict[93000].groupby([0,1]).mean()
     for key in HH_dict.keys():
+        pdb.set_trace()
         HH_dict[key] = HH_dict[key].groupby(1).mean()
         HH_dict[key]["S"] = key 
     merged_DF = pd.concat(HH_dict.values())
