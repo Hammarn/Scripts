@@ -18,12 +18,12 @@ from bokeh.palettes import inferno
 import pdb
 
 def read_input(input_file):
-    print "Reading data.."
+    print("Reading data..")
     in_data = pd.read_csv(input_file, sep = "\s+" )
     return in_data
 
 def do_UMAP(data):
-    print "Performing dimensionality reduction"
+    print("Performing dimensionality reduction")
     reducer = umap.UMAP()
     data_NO_index=data.drop(data.columns[[0,1]], axis=1)
     embedding = reducer.fit_transform(data_NO_index)
@@ -31,12 +31,13 @@ def do_UMAP(data):
 
 def plotting(umaped_data, raw_data, output, key_file):
     key=key_file
-    print "Building plot"
+    print("Building plot")
     umaped_df =  pd.DataFrame(data=umaped_data)
 
     source = pd.concat([raw_data[['FID','IID']], umaped_df], axis=1)
     source.set_index('FID')
     source  = source.rename(columns={0: "x", 1: "y"})
+    source.to_csv('UMAP_on_10_PCA_components.csv', index=False)
     p = figure(title="UMAP of first 10 PCs", toolbar_location="above", x_axis_label="UMAP 1",y_axis_label="UMAP 2",plot_width = 1500, plot_height = 1000)
     
     fids = source.FID.unique()
@@ -51,7 +52,7 @@ def plotting(umaped_data, raw_data, output, key_file):
                 for line in f:
                     key_info[line.split()[0]] =  " ".join(line.split()[1:]) 
         except  IOError:
-            print "Could not open the file '{}'".format(key)
+            print("Could not open the file '{}'".format(key))
             sys.exit()
 
         regions = set(key_info.values())
@@ -100,7 +101,7 @@ def plotting(umaped_data, raw_data, output, key_file):
     
     
     outfile=output
-    print "Saving output to {}.html".format(outfile) 
+    print("Saving output to {}.html".format(outfile)) 
     output_file('{}.html'.format(outfile))
    
     show(p)
