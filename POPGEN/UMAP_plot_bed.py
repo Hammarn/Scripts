@@ -41,6 +41,7 @@ def plotting(umaped_data, bim, fam, output, key_file):
     source = pd.concat([fam[['fid','iid']], umaped_df], axis=1) 
     source.set_index('fid')
     source  = source.rename(columns={0: "x", 1: "y"})
+    source.to_csv('UMAP_on_BED_file_components.csv', index=False)
     p = figure(title="UMAP of genotypes", toolbar_location="above", x_axis_label="UMAP 1",y_axis_label="UMAP 2",plot_width = 1500, plot_height = 1000)
     
     fids = source.fid.unique()
@@ -120,9 +121,9 @@ def plotting(umaped_data, bim, fam, output, key_file):
 
 if __name__ == "__main__":
     # Command line arguments
-    parser = argparse.ArgumentParser("Take PCA eigenvectors from FlashPCA or similar, perform UMAP dimension reduction and plot the result")
+    parser = argparse.ArgumentParser("Take genotype data in PLINK format, perform UMAP dimension reduction and plot the result")
     parser.add_argument("-i", "--input", default = 'pcs.txt',
-    help="Name of inputfile")
+    help="Basename of the PLINK file")
     parser.add_argument("-o", "--output", default = 'UMAP',
     help="Name of outputfile")
     parser.add_argument("-k", "--key",
