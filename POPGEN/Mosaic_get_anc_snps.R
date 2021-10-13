@@ -34,6 +34,16 @@ for (i in 1:nchrno) {
     snps[[i]] <- snps[[i]][,c(2,1,3,4)]
 }
 
+## Create the tfam file!
+fileConn<-file(paste(target,"_EU.tfam", sep=""))
+to_write <- c()
+num_inds <- NUMA/2
+for (ind in  1:num_inds){
+    to_write <- c(paste(target, "_EU " ,target,ind, " 0 0 1 1" ,sep = ""), to_write)
+}
+writeLines(to_write,fileConn )
+close(fileConn)
+
 # Not needed
 #positions=lapply(1:nchrno, function(i) lapply(1:NUMA, function(h) snps[[i]][anc[[i]][[h]],4])) 
 
