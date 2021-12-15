@@ -48,7 +48,7 @@ def main():
     args = parser.parse_args()
     print("Reading tped file, this might take a while")
     input_name = args.input
-    #tped = read_tped("{}.tped".format(input_name))
+    tped = read_tped("{}.tped".format(input_name))
     tfam = read_tped("{}.tfam".format(input_name))
     
     
@@ -62,7 +62,7 @@ def main():
     
     else:
         print("De-duplicating tped")
-        #deduplicate_tped(tped).to_csv("{}_dedup.tped".format(input_name), sep = " ", index = False, header = False)
+        deduplicate_tped(tped).to_csv("{}_dedup.tped".format(input_name), sep = " ", index = False, header = False)
         deduplicate_tfam(tfam).to_csv("{}_dedup.tfam".format(input_name), sep = " ", index = False, header = False)
     
 
