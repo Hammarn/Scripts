@@ -268,7 +268,9 @@ if __name__ == "__main__":
     chr_numb = 2 * int(args.number_of_individuals)
     
     ##  Set up check to determine if we are doing tped or .haps approach?
-   
+    
+    ### Set default value
+    haps_check = False  
 
 
     if args.tped is not None:

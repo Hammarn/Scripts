@@ -1,5 +1,7 @@
-import sys
+#!/usr/bin/env python2
+# -*- coding: utf-8 -*-
 
+import sys
 
 input_file = sys.argv[1]
 with open (input_file, 'r') as f:
