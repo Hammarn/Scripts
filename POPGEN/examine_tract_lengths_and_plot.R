@@ -61,8 +61,8 @@ df_long <- melt(binned.tracts, id.vars = "mids")
 ggplot() +
   ggtitle(target)+
   scale_y_continuous(trans='log10')+
-  geom_line(data = df_long, aes(x = mids * 100, y= value, colour=variable))+
-  geom_point(data = df_long, aes(x = mids * 100, y= value, colour=variable))+
+  geom_line(data = df_long, aes(x = mids / 60, y= value, colour=variable))+
+  geom_point(data = df_long, aes(x = mids / 60, y= value, colour=variable))+
   xlab("tract length (cM)") +
   ylab("Number of Tracts") +
   guides(colour=guide_legend(title="Ancestry"))+
