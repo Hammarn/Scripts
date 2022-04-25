@@ -8,9 +8,8 @@ import random
 import pandas as pd
 import numpy as np
 import sys
-import itertools
 
-
+from itertools import combinations
 from datetime import datetime
 from collections import OrderedDict
 from collections import Counter
@@ -87,7 +86,7 @@ def calculate_fst(pop1, pop2,  pop_haps1, pop_haps2):
         p2 = (counts2[key2]/len(hap_list2))** 2 
         p_sum2 += p2
 
-        tot = ( (counts1[key1] + counts2[key1]) / (len(hap_list2)) + len(hap_list2)) ) **2
+        tot = ( (counts1[key1] + counts2[key1]) / (len(hap_list2)) + len(hap_list2) ) **2
         tot_sum += tot
     
     HH1 = 1 - p_sum1
@@ -140,6 +139,9 @@ def split_into_haplotypes(tped_D, K, N, tped_index_dict, chr_numb, outfile):
     print("Current Time =", current_time)
 
     pops = tped_index_dict.keys()
+    paired_pops = combinations(pops, 2)
+
+
 
     with  open(outfile, "w") as fh:
     ### Loop through each chromsosome (i)
@@ -228,16 +230,6 @@ def split_into_haplotypes(tped_D, K, N, tped_index_dict, chr_numb, outfile):
                             #combinations() from itertools generates uniq pairs.
                             
                             
-                            
-                            
-                            if fst_mode == True:
-                                 
-                                break
-
-                            ## Normal HH mode:
-                            for pop in pops:
-                                pdb.set_trace()
-                                ### Here is we find out wich coloumns belongs to this population.
                                 # For Fst;
                                 # Define pop 1 and pop2
                                 # Find haps for each. 
@@ -245,6 +237,37 @@ def split_into_haplotypes(tped_D, K, N, tped_index_dict, chr_numb, outfile):
                                 # add them together and calculate HH for the total
                                 # Fst is (Ht-Hs)/Ht
                                 # Where  Ht is HH for total and Hs is the average of HH from pop1 and pop2
+                            
+                            
+                            if args.fst_mode == True:
+                                
+                                for pair in paired_pops:
+                                    pop1 = pair[0]
+                                    pop2 = pair[1]
+                               
+                                    pdb.set_trace()    
+                                    if len(tped_index_dict[pop]) > chr_numb:
+                                        # Downsample to chr_numb
+                                        pop_haps1 = random.sample(tped_index_dict[pop1][1:],chr_numb)
+                                    else:
+                                        pop_haps1 = tped_index_dict[pop1][1:]
+
+                                    if len(tped_index_dict[pop]) > chr_numb:
+                                        # Downsample to chr_numb
+                                        pop_haps2 = random.sample(tped_index_dict[pop2][1:],chr_numb)
+                                    else:
+                                        pop_haps2 = tped_index_dict[pop2][1:]
+                                    
+                                    
+
+
+                                    fst = calculate_fst(pop1, pop2, pop_haps1, pop_haps2) 
+                                    ## average? 
+
+                            ## Normal HH mode:
+                            for pop in pops:
+                                pdb.set_trace()
+                                ### Here is we find out wich coloumns belongs to this population.
                                 if len(tped_index_dict[pop]) > chr_numb:
                                     # Downsample to chr_numb
                                     haps = random.sample(tped_index_dict[pop][1:],chr_numb)
@@ -309,13 +332,14 @@ if __name__ == "__main__":
         help="size of the haplotype window to divide the genome into.")
     parser.add_argument("-o", "--outfile", default = "HH.txt",
         help="Outfile name")
-    parser.add_argument("-fst", "--fst_mode", default = False,
-        help="If the script should produce Nei's Fst values instead of HH ")
+    parser.add_argument( "--fst", dest = 'fst_mode', action='store_true',
+        help="If the script should produce Nei's Fst values instead of HH")
     parser.add_argument('--skip', dest='skip', action='store_true',
         help="Skip populations with too small sample size")
     parser.add_argument('--no-skip', dest='skip', action='store_false',
         help="Don't skip populations with too small sample size")
     parser.set_defaults(skip=True) 
+    parser.set_defaults(fst_mode=False) 
     
     args = parser.parse_args()
 
@@ -328,7 +352,6 @@ if __name__ == "__main__":
     
     ### Set default value
     haps_check = False  
-
 
     if args.tped is not None:
         tped_DF = read_tped(args.tped)
