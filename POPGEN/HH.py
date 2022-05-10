@@ -234,9 +234,7 @@ def split_into_haplotypes(tped_D, K, N, tped_index_dict, chr_numb, outfile):
                              ### Randomly draw haplotypes to look at, depending on user supplied number of "chr"'
                             ### In practise the smallest sample size
 
-
                         if args.fst_mode == True:
-                           print("fst")
                             #combinations() from itertools generates uniq pairs.
                                 # For Fst;
                                 # Define pop 1 and pop2
@@ -309,13 +307,13 @@ def split_into_haplotypes(tped_D, K, N, tped_index_dict, chr_numb, outfile):
                     
                     
                         if args.fst_mode == True:
-                            print("Hej")
-                            pdb.set_trace()
                             paired_pops = combinations(pops, 2)
                             for pair in paired_pops:
+                                
                                 try: 
+
                                     Fst_ave = mean(Fst_dict['-'.join(pair)])
-                                    print(test)
+                                    #print(test)
                                     string_to_write = "{}\t{}\t{}\t{}\n".format(i + 1, '-'.join(pair), counter, Fst_ave)
                                     fh.write(string_to_write)
                                 except:
