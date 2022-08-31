@@ -98,7 +98,7 @@ def calculate_fst(pop1, pop2,  pop_haps1, pop_haps2):
 
     Fst = (Ht -Hs)/Ht
 
-    return Fst
+    return Fst, Hs
 
 def split_into_haplotypes(tped_D, K, N, tped_index_dict, chr_numb, outfile):
     ###   CHR SNP_NAME BLAJ SNP_POS 
@@ -201,11 +201,13 @@ def split_into_haplotypes(tped_D, K, N, tped_index_dict, chr_numb, outfile):
                     HH_dict = {}
                     richness_dict = {}
                     Fst_dict = {}
+                    Hs_dict = {}
                     ## set up the empty lists
                     paired_pops = combinations(pops, 2)
                     for pair in paired_pops: 
                          
                         Fst_dict['-'.join(pair)] = []
+                        Hs_dict['-'.join(pair)] = []
                    
                     for pop in pops:
                         HH_dict[pop] = []
@@ -271,8 +273,9 @@ def split_into_haplotypes(tped_D, K, N, tped_index_dict, chr_numb, outfile):
                                    pop_haps2 = pop_haps2.replace(1, window[4])
                                    ## transpose back
 
-                               fst = calculate_fst(pop1, pop2, pop_haps1, pop_haps2) 
+                               fst,Hs = calculate_fst(pop1, pop2, pop_haps1, pop_haps2) 
                                Fst_dict['-'.join(pair)].append(fst)
+                               Hs_dict['-'.join(pair)].append(Hs)
                                ## average?
                                 
                         if args.fst_mode == False:
@@ -313,8 +316,9 @@ def split_into_haplotypes(tped_D, K, N, tped_index_dict, chr_numb, outfile):
                                 try: 
 
                                     Fst_ave = mean(Fst_dict['-'.join(pair)])
+                                    Hs_ave = mean(Hs_dict['-'.join(pair)])
                                     #print(test)
-                                    string_to_write = "{}\t{}\t{}\t{}\n".format(i + 1, '-'.join(pair), counter, Fst_ave)
+                                    string_to_write = "{}\t{}\t{}\t{}\t{}\n".format(i + 1, '-'.join(pair), counter, Fst_ave, Hs_ave)
                                     fh.write(string_to_write)
                                 except:
                                     ## empty window
