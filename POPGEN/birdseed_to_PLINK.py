@@ -33,10 +33,9 @@ def find_genotype(genotype, ALLELE_A, ALLELE_B):
                 return_genotype = return_genotype + " " + ALLELE_B
     except TypeError:
         ## An empty genotype will throw a typeerror:
-        if genotype == "nan":
-            ### As far as I can tell the Bordseed format will have either
-            ### Both genotypes or none, never one present and one missing
-            return_genotype = return_genotype + 00
+        ### As far as I can tell the Bordseed format will have either
+        ### Both genotypes or none, never one present and one missing
+        return_genotype = return_genotype + "00"
 
 
     return (return_genotype)

@@ -100,9 +100,9 @@ def make_figure(PCS,output_name, pops, color, data, key_info, nu_legends) :
     data = pd.merge(data, ki_re, on = ['FID'])
     if nu_legends == '2':
         nu_legends=2
-
     ### 2 legends
     if nu_legends == 2:
+        pdb.set_trace()
         for counter,pop in enumerate(ki.index.values):
             if counter < lenght_of_leg:
                 
@@ -165,6 +165,5 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     data = read_input(args.input)
-
 
     plotting(data, args.output, args.key, args.legend)
