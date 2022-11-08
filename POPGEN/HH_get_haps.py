@@ -40,18 +40,14 @@ def read_haps(haps):
     #T_DF = T_DF.iloc[:,5:-1].replace(1, T_DF[4])
     return T_DF
 
-def read_sample(sample):
-    pdb.set_trace()
-    return
 
 
-
-def calculate_metrics(pop, pop_haps):
+def calculate_metrics(pop, pop_haps, counter, K):
 
     hap_list = []
     for haplotype in pop_haps:
         hap_list.append("".join(pop_haps[haplotype].tolist()))
-    
+   
     counts = Counter(hap_list)
     p_sum = 0
     for key in counts:
@@ -62,43 +58,6 @@ def calculate_metrics(pop, pop_haps):
     #            string_to_write += "{}\t{}\t{}\t{}\t{}\n".format(chr + 1, pop, window, richness, HH) 
     return  HH
 
-def calculate_fst(pop1, pop2,  pop_haps1, pop_haps2):
-
-    hap_list1 = []
-    for haplotype in pop_haps1:
-        hap_list1.append("".join(pop_haps1[haplotype].tolist()))
-    
-    hap_list2 = []
-    for haplotype in pop_haps2:
-        hap_list2.append("".join(pop_haps2[haplotype].tolist()))
-    
-    counts1 = Counter(hap_list1)
-    counts2 = Counter(hap_list2)
-    
-    p_sum1 = 0
-    p_sum2 = 0
-    tot = 0
-    tot_sum = 0
-
-    
-    for key1,key2 in zip(counts1, counts2):
-        p1 = (counts1[key1]/len(hap_list1))** 2 
-        p_sum1 += p1
-    
-        p2 = (counts2[key2]/len(hap_list2))** 2 
-        p_sum2 += p2
-
-        tot = (  ((counts1[key1] + counts2[key1])) / ((len(hap_list2)) + len(hap_list2))  ) **2
-        tot_sum += tot
-    
-    HH1 = 1 - p_sum1
-    HH2 = 1 - p_sum2
-    Hs = (HH1 + HH2)/2 
-    Ht = 1 - tot_sum 
-
-    Fst = (Ht -Hs)/Ht
-
-    return Fst, Hs
 
 def split_into_haplotypes(tped_D, K, N, tped_index_dict, chr_numb, outfile):
     ###   CHR SNP_NAME BLAJ SNP_POS 
@@ -197,23 +156,15 @@ def split_into_haplotypes(tped_D, K, N, tped_index_dict, chr_numb, outfile):
                             Allele_2 = 1
                         
                     ### Below is the code that is window dependent.
-                    ### In order to reduce randomness this is repeated 10 times and only the average is saved
                     HH_dict = {}
                     richness_dict = {}
                     Fst_dict = {}
                     Hs_dict = {}
                     ## set up the empty lists
-                    paired_pops = combinations(pops, 2)
-                    for pair in paired_pops: 
-                         
-                        Fst_dict['-'.join(pair)] = []
-                        Hs_dict['-'.join(pair)] = []
-                   
                     for pop in pops:
                         HH_dict[pop] = []
                         richness_dict[pop] = []
-                        ##here 
-                    for iteration in range(1,11):
+                        
                         ## Remove the row is MAF <= 10%
                         ## As long as the value within value_counts() is a string it will return a fraction, which is what we want
                         if SNP_series.value_counts("any_key")[0] <= 0.10 or SNP_series.value_counts("any_key")[1] <= 0.10: 
@@ -236,52 +187,12 @@ def split_into_haplotypes(tped_D, K, N, tped_index_dict, chr_numb, outfile):
                              ### Randomly draw haplotypes to look at, depending on user supplied number of "chr"'
                             ### In practise the smallest sample size
 
-                        if args.fst_mode == True:
-                            #combinations() from itertools generates uniq pairs.
-                                # For Fst;
-                                # Define pop 1 and pop2
-                                # Find haps for each. 
-                                # calcualte HH for each
-                                # add them together and calculate HH for the total
-                                # Fst is (Ht-Hs)/Ht
-                                # Where  Ht is HH for total and Hs is the average of HH from pop1 and pop2
-                           paired_pops = combinations(pops, 2)
-                           for pair in paired_pops:
-                               pop1 = pair[0]
-                               pop2 = pair[1]
-                           
-                               if len(tped_index_dict[pop]) > chr_numb:
-                                   # Downsample to chr_numb
-                                   haps1 = random.sample(tped_index_dict[pop1][1:],chr_numb)
-                               else:
-                                   haps1 = tped_index_dict[pop1][1:]
-
-                               if len(tped_index_dict[pop]) > chr_numb:
-                                   # Downsample to chr_numb
-                                   haps2 = random.sample(tped_index_dict[pop2][1:],chr_numb)
-                               else:
-                                   haps2 = tped_index_dict[pop2][1:]
-
-                               pop_haps1 = window.iloc[:,np.r_[haps1]]
-                               pop_haps2 = window.iloc[:,np.r_[haps2]]
-                               if dataframe_column_int == 2:
-                                   # Haps mode
-                                   ## For .haps we need to replace the 0 1 with the actual nucleotides here
-                                   pop_haps1 = pop_haps1.T.replace(0, window[3]) 
-                                   pop_haps1 = pop_haps1.replace(1, window[4])
-                                   pop_haps2 = pop_haps2.T.replace(0, window[3]) 
-                                   pop_haps2 = pop_haps2.replace(1, window[4])
-                                   ## transpose back
-
-                               fst,Hs = calculate_fst(pop1, pop2, pop_haps1, pop_haps2) 
-                               Fst_dict['-'.join(pair)].append(fst)
-                               Hs_dict['-'.join(pair)].append(Hs)
-                               ## average?
                                 
                         if args.fst_mode == False:
                             ## Normal HH mode:
                             for pop in pops:
                                 ### Here is we find out wich coloumns belongs to this population.
+                                
                                 if len(tped_index_dict[pop]) > chr_numb:
                                     # Downsample to chr_numb
                                     haps = random.sample(tped_index_dict[pop][1:],chr_numb)
@@ -299,44 +210,21 @@ def split_into_haplotypes(tped_D, K, N, tped_index_dict, chr_numb, outfile):
                                 
                                 ## Metrics
                                 ## len()  on a datframe is number of rows       
-                                richness = len(pop_haps.T.drop_duplicates())
-                                HH  = calculate_metrics(pop, pop_haps)
-                                HH_dict[pop].append(HH)
-                                richness_dict[pop].append(richness)    
-                    
-                            ## Calcultate averages at the end of 10 iterations
-                            ## We only need to save/write to file is there was one sampling with values
-                    
-                    
-                    
-                        if args.fst_mode == True:
-                            paired_pops = combinations(pops, 2)
-                            for pair in paired_pops:
-                                
-                                try: 
+                                #richness = len(pop_haps.T.drop_duplicates())
+                                #HH  = calculate_metrics(pop, pop_haps,counter, K )
+                                #HH_dict[pop].append(HH)
+                                #richness_dict[pop].append(richness)    
+                                hap_list = []
+                                for haplotype in pop_haps:
+                                  hap_list.append("".join(pop_haps[haplotype].tolist()))
 
-                                    Fst_ave = mean(Fst_dict['-'.join(pair)])
-                                    Hs_ave = mean(Hs_dict['-'.join(pair)])
-                                    #print(test)
-                                    string_to_write = "{}\t{}\t{}\t{}\t{}\n".format(i + 1, '-'.join(pair), counter, Fst_ave, Hs_ave)
-                                    fh.write(string_to_write)
-                                except:
-                                    ## empty window
-                                     counter += K
-                                     continue
+                                
+                                string_to_write = "{}\t{}\t{}\t{}\n".format(i + 1, pop, counter,hap_list)
+                                fh.write(string_to_write)
+                                 
+
+                    
                         
-                        
-                        if args.fst_mode == False:
-                            for pop in pops:
-                                try: 
-                                    HH_ave = mean(HH_dict[pop])
-                                    richness_ave = mean(richness_dict[pop])
-                                    string_to_write = "{}\t{}\t{}\t{}\t{}\n".format(i + 1, pop, counter, HH_ave, richness_ave)
-                                    fh.write(string_to_write)
-                                except:
-                                    ## empty window
-                                         counter += K
-                                         continue
                     ## Done with a window, on to next    
                     counter += K
              
